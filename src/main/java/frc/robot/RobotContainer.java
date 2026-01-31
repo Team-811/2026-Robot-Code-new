@@ -142,7 +142,8 @@ public class RobotContainer {
                 }));
 
     // Vision-assisted align/target commands.
-    driverController.b().onTrue(new FaceAprilTag(drivetrain, lime));
+    // Run face-to-tag only while B is held so driver regains control on release.
+    driverController.b().whileTrue(new FaceAprilTag(drivetrain, lime));
     
     // SysId bindings to characterize drivetrain when requested.
     driverController.start().and(driverController.y())
