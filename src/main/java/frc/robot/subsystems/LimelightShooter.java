@@ -22,9 +22,9 @@ import frc.robot.LimelightHelpers;
  * - Data is only fresh when this subsystem is scheduled; keep it registered in the robot container.
  * - Fields are static for simplicity; if you add more cameras, refactor to instance state to avoid collisions.
  */
-public class Limelight2 extends SubsystemBase{
+public class LimelightShooter extends SubsystemBase{
     // Public so commands can refer to the correct NetworkTables instance / pipeline.
-    public static final String LL_NAME = "limelight-lime";
+    public static final String LL_NAME = "limelight-Shooter";
     NetworkTable table2;
     static double x, y, area, distX, distY, distZ, angleTargetRadians, v, robotYaw;
     int fiducialID;
@@ -32,7 +32,7 @@ public class Limelight2 extends SubsystemBase{
     Pose3d targetPose, botPose;
     Rotation3d targetRotation, botRotation;
     
-    public Limelight2(){
+    public LimelightShooter(){
         table2 = NetworkTableInstance.getDefault().getTable(LL_NAME);
         tx = table2.getEntry("tx");
         ty = table2.getEntry("ty");
@@ -76,21 +76,21 @@ public class Limelight2 extends SubsystemBase{
         fiducialID = (int)LimelightHelpers.getFiducialID(LL_NAME);
     }
     /**
-     * Publishes current snapshot to SmartDashboard. Keeps keys namespaced under "Limelight2/".
+     * Publishes current snapshot to SmartDashboard. Keeps keys namespaced under "LimelightShooter/".
      */
     public void updateDashboard(){
         //post to smart dashboard periodically
-        SmartDashboard.putBoolean("Limelight2/Valid", v > 0.5); // tv is 0/1; publish as boolean for clarity
-        SmartDashboard.putNumber("Limelight2/XDegrees", x);
-        SmartDashboard.putNumber("Limelight2/YDegrees", y);
-        SmartDashboard.putNumber("Limelight2/Area", area);
-        SmartDashboard.putNumber("Limelight2/DistanceX", distX);
-        SmartDashboard.putNumber("Limelight2/DistanceY", distY);
-        SmartDashboard.putNumber("Limelight2/DistanceZ", distZ);
-        SmartDashboard.putNumber("Limelight2/TargetYawRadians", angleTargetRadians);
-        SmartDashboard.putNumber("Limelight2/FiducialId", fiducialID);
-        SmartDashboard.putNumber("Limelight2/RobotYawRadians", robotYaw);
-        SmartDashboard.putString("Limelight2/Status", v > 0.5 ? "Target Acquired" : "No Target");
+        SmartDashboard.putBoolean("LimelightShooter/Valid", v > 0.5); // tv is 0/1; publish as boolean for clarity
+        SmartDashboard.putNumber("LimelightShooter/XDegrees", x);
+        SmartDashboard.putNumber("LimelightShooter/YDegrees", y);
+        SmartDashboard.putNumber("LimelightShooter/Area", area);
+        SmartDashboard.putNumber("LimelightShooter/DistanceX", distX);
+        SmartDashboard.putNumber("LimelightShooter/DistanceY", distY);
+        SmartDashboard.putNumber("LimelightShooter/DistanceZ", distZ);
+        SmartDashboard.putNumber("LimelightShooter/TargetYawRadians", angleTargetRadians);
+        SmartDashboard.putNumber("LimelightShooter/FiducialId", fiducialID);
+        SmartDashboard.putNumber("LimelightShooter/RobotYawRadians", robotYaw);
+        SmartDashboard.putString("LimelightShooter/Status", v > 0.5 ? "Target Acquired" : "No Target");
     }
     @Override
     public void periodic(){

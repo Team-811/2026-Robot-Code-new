@@ -10,7 +10,7 @@
 //   Left bumper  = Fast (1.0)
 //   Neither      = Normal (0.8)
 //
-// Limelight (hold-to-run):
+// LimelightShooter (hold-to-run):
 //   Right trigger: CenterToTagOneMeter (drive to ~1 m, center X and yaw)
 //   Left trigger:  AprilTagAim (drive/strafe/yaw to ~0.3048 m, slow near goal)
 //   Pipeline/LEDs must be set to AprilTag with LEDs on; no target -> zero output.
@@ -22,7 +22,7 @@
 // Notes:
 // Default command is field-centric drive; MaxSpeed is scaled by kSpeed=1.0.
 // SysId bindings require robot in a safe state; they override normal driving while held.
-// Limelight: Targeting is enabled/disabled inside the aim commands; 
+// LimelightShooter: Targeting is enabled/disabled inside the aim commands; 
 //This file is loacted C:\Users\Team 811\FRC\2025-Robot-Code-new\2025-Robot-Code-new\src\main\java\frc\robot
 //            Ensure the tag pipeline is active and LEDs on when using triggers.
 package frc.robot;
@@ -41,7 +41,8 @@ import frc.robot.commands.FaceAprilTag;
 import frc.robot.commands.ShootToAprilTag;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
-import frc.robot.subsystems.Limelight2;
+import frc.robot.subsystems.LimelightShooter;
+import frc.robot.subsystems.LimelightClimber;
 import frc.robot.subsystems.Shooter;
 
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -79,10 +80,10 @@ public class RobotContainer {
   private final SlewRateLimiter slewLimX = new SlewRateLimiter(2.0);
   private final SlewRateLimiter slewLimRote = new SlewRateLimiter(1.0);
 
-
-  // private final frc.robot.subsystems.Limelight limelight = new frc.robot.subsystems.Limelight();
-  private final Limelight2 lime = new Limelight2();
+  private final LimelightShooter limeShooter = new LimelightShooter(); // primary LL (scoring/AprilTag aim)
+  private final LimelightClimber limeClimber = new LimelightClimber(); // secondary LL4 for climber/stage
   private final Shooter shooter = new Shooter();
+
   // Cache last-published driver telemetry to avoid NetworkTables spam.
   private String lastMode;
   private Double lastScale;
@@ -141,12 +142,15 @@ public class RobotContainer {
                       .withRotationalRate(slewLimRote.calculate(-joyRightX()) * MaxAngularRate * scale);
                 }));
 
-    // Vision-assisted align/target commands.
+    //-- SHOOTER VISION -- Vision-assisted align/target commands.
     // Run face-to-tag only while B is held so driver regains control on release.
-    driverController.b().whileTrue(new FaceAprilTag(drivetrain, lime));
+    driverController.b().whileTrue(new FaceAprilTag(drivetrain, limeShooter));
     // Map right trigger to distance-based shooter feed using Limelight range.
-    driverController.rightTrigger().whileTrue(new ShootToAprilTag(shooter, lime));
+    driverController.rightTrigger().whileTrue(new ShootToAprilTag(shooter, limeShooter));
     
+    //-- CLIMBER VISION -- Vision-assisted align/target commands.
+    //driverController.y().whileTrue(new FaceTowerClimber(drivetrain, limeClimber));
+
     // SysId bindings to characterize drivetrain when requested.
     driverController.start().and(driverController.y())
         .whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward).finallyDo((interrupted) -> sysIdActive = false))
@@ -158,11 +162,7 @@ public class RobotContainer {
         .and(driverController.y().negate())
         .and(driverController.x().negate())
         .onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
-    // Hold left trigger to face the nearest AprilTag using Limelight.
-    // driverController.leftTrigger().whileTrue(new FaceAprilTag(drivetrain, limelight));
-
-    // driverController.leftTrigger().whileTrue(new stopMOVING(lime, drivetrain));
-
+        
     // Push live drivetrain telemetry to the log so you can monitor speeds, states, and odometry.
     drivetrain.registerTelemetry(logger::telemeterize);
   }

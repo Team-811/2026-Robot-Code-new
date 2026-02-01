@@ -3,7 +3,7 @@ package frc.robot.commands;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.Limelight2;
+import frc.robot.subsystems.LimelightShooter;
 import frc.robot.subsystems.Shooter;
 
 /**
@@ -13,7 +13,7 @@ import frc.robot.subsystems.Shooter;
  */
 public class ShootToAprilTag extends Command {
   private final Shooter shooter;
-  private final Limelight2 limelight;
+  private final LimelightShooter limelight;
 
   // Distance (ft) -> top percent, bottom percent. Tune to your shooter/ballistics.
   // Entries are sorted and will be linearly interpolated for smooth RPM changes.
@@ -27,7 +27,7 @@ public class ShootToAprilTag extends Command {
       {30.0, 0.85, 0.88}
   };
 
-  public ShootToAprilTag(Shooter shooter, Limelight2 limelight) {
+  public ShootToAprilTag(Shooter shooter, LimelightShooter limelight) {
     this.shooter = shooter;
     this.limelight = limelight;
     addRequirements(shooter, limelight);
@@ -41,7 +41,7 @@ public class ShootToAprilTag extends Command {
 
   @Override
   public void execute() {
-    boolean hasTarget = Limelight2.hasTarget();
+    boolean hasTarget = LimelightShooter.hasTarget();
     SmartDashboard.putBoolean("Shooter/HasTarget", hasTarget);
 
     if (!hasTarget) {
@@ -51,7 +51,7 @@ public class ShootToAprilTag extends Command {
       return;
     }
 
-    double distMeters = Limelight2.getDistZ();
+    double distMeters = LimelightShooter.getDistZ();
     double distFeet = Units.metersToFeet(Math.abs(distMeters));
 
     // Why: guard against bogus readings so we don't command garbage outputs.
