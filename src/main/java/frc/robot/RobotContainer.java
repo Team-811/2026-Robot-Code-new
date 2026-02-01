@@ -38,10 +38,12 @@ package frc.robot;
  */
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.FaceAprilTag;
+import frc.robot.commands.ShootToAprilTag;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 // import main.java.frc.robot.commands.stopMOVING;
 import frc.robot.subsystems.Limelight2;
+import frc.robot.subsystems.Shooter;
 
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -82,6 +84,7 @@ public class RobotContainer {
 
   // private final frc.robot.subsystems.Limelight limelight = new frc.robot.subsystems.Limelight();
   private final Limelight2 lime = new Limelight2();
+  private final Shooter shooter = new Shooter();
   // Cache last-published driver telemetry to avoid NetworkTables spam.
   private String lastMode;
   private Double lastScale;
@@ -143,6 +146,8 @@ public class RobotContainer {
     // Vision-assisted align/target commands.
     // Run face-to-tag only while B is held so driver regains control on release.
     driverController.b().whileTrue(new FaceAprilTag(drivetrain, lime));
+    // Map right trigger to distance-based shooter feed using Limelight range.
+    driverController.rightTrigger().whileTrue(new ShootToAprilTag(shooter, lime));
     
     // SysId bindings to characterize drivetrain when requested.
     driverController.start().and(driverController.y())
