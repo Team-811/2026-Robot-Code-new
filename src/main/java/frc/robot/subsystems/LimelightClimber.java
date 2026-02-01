@@ -75,17 +75,17 @@ public class LimelightClimber extends SubsystemBase {
      * Publish current snapshot to SmartDashboard (namespaced under LimelightClimber/).
      */
     public void updateDashboard() {
-        SmartDashboard.putBoolean("LimelightClimber/Valid", v > 0.5);
-        SmartDashboard.putNumber("LimelightClimber/XDegrees", x);
-        SmartDashboard.putNumber("LimelightClimber/YDegrees", y);
-        SmartDashboard.putNumber("LimelightClimber/Area", area);
-        SmartDashboard.putNumber("LimelightClimber/DistanceX", distX);
-        SmartDashboard.putNumber("LimelightClimber/DistanceY", distY);
-        SmartDashboard.putNumber("LimelightClimber/DistanceZ", distZ);
-        SmartDashboard.putNumber("LimelightClimber/TargetYawRadians", angleTargetRadians);
-        SmartDashboard.putNumber("LimelightClimber/FiducialId", fiducialID);
-        SmartDashboard.putNumber("LimelightClimber/RobotYawRadians", robotYaw);
-        SmartDashboard.putString("LimelightClimber/Status", v > 0.5 ? "Target Acquired" : "No Target");
+        SmartDashboard.putBoolean("Limelight/Climber/Valid", v > 0.5);
+        SmartDashboard.putNumber("Limelight/Climber/XDegrees", x);
+        SmartDashboard.putNumber("Limelight/Climber/YDegrees", y);
+        SmartDashboard.putNumber("Limelight/Climber/Area", area);
+        SmartDashboard.putNumber("Limelight/Climber/DistanceX", distX);
+        SmartDashboard.putNumber("Limelight/Climber/DistanceY", distY);
+        SmartDashboard.putNumber("Limelight/Climber/DistanceZ", distZ);
+        SmartDashboard.putNumber("Limelight/Climber/TargetYawRadians", angleTargetRadians);
+        SmartDashboard.putNumber("Limelight/Climber/FiducialId", fiducialID);
+        SmartDashboard.putNumber("Limelight/Climber/RobotYawRadians", robotYaw);
+        SmartDashboard.putString("Limelight/Climber/Status", v > 0.5 ? "Target Acquired" : "No Target");
     }
 
     @Override

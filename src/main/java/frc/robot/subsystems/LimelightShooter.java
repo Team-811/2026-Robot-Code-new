@@ -80,17 +80,17 @@ public class LimelightShooter extends SubsystemBase{
      */
     public void updateDashboard(){
         //post to smart dashboard periodically
-        SmartDashboard.putBoolean("LimelightShooter/Valid", v > 0.5); // tv is 0/1; publish as boolean for clarity
-        SmartDashboard.putNumber("LimelightShooter/XDegrees", x);
-        SmartDashboard.putNumber("LimelightShooter/YDegrees", y);
-        SmartDashboard.putNumber("LimelightShooter/Area", area);
-        SmartDashboard.putNumber("LimelightShooter/DistanceX", distX);
-        SmartDashboard.putNumber("LimelightShooter/DistanceY", distY);
-        SmartDashboard.putNumber("LimelightShooter/DistanceZ", distZ);
-        SmartDashboard.putNumber("LimelightShooter/TargetYawRadians", angleTargetRadians);
-        SmartDashboard.putNumber("LimelightShooter/FiducialId", fiducialID);
-        SmartDashboard.putNumber("LimelightShooter/RobotYawRadians", robotYaw);
-        SmartDashboard.putString("LimelightShooter/Status", v > 0.5 ? "Target Acquired" : "No Target");
+        SmartDashboard.putBoolean("Limelight/Shooter/Valid", v > 0.5); // tv is 0/1; publish as boolean for clarity
+        SmartDashboard.putNumber("Limelight/Shooter/XDegrees", x);
+        SmartDashboard.putNumber("Limelight/Shooter/YDegrees", y);
+        SmartDashboard.putNumber("Limelight/Shooter/Area", area);
+        SmartDashboard.putNumber("Limelight/Shooter/DistanceX", distX);
+        SmartDashboard.putNumber("Limelight/Shooter/DistanceY", distY);
+        SmartDashboard.putNumber("Limelight/Shooter/DistanceZ", distZ);
+        SmartDashboard.putNumber("Limelight/Shooter/TargetYawRadians", angleTargetRadians);
+        SmartDashboard.putNumber("Limelight/Shooter/FiducialId", fiducialID);
+        SmartDashboard.putNumber("Limelight/Shooter/RobotYawRadians", robotYaw);
+        SmartDashboard.putString("Limelight/Shooter/Status", v > 0.5 ? "Target Acquired" : "No Target");
     }
     @Override
     public void periodic(){
