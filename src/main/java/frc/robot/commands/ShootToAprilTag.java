@@ -64,7 +64,7 @@ public class ShootToAprilTag extends Command {
 
     double[] speeds = lookupShooterMotorSpeeds(distFeet);
 
-    shooter.setPercents(speeds[0], speeds[1]); //TODO: check if the setPercents is 0, 1 or 1,2.
+    shooter.setPercents(speeds[0], speeds[1]);
 
     SmartDashboard.putString("Shooter/Status", "Running");
     SmartDashboard.putNumber("Shooter/DistanceFt", distFeet);
