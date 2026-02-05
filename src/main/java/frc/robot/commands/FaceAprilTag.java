@@ -121,7 +121,8 @@ public class FaceAprilTag extends Command {
   /** Finish after the target is held within tolerance for the configured dwell. */
   @Override
   public boolean isFinished() {
-    // Do not finish if no valid target; otherwise stop when within tolerance.
-    return LimelightShooter.hasTarget() == true && onTargetCycles >= ON_TARGET_CYCLES_REQUIRED;
+    // This command is bound with whileTrue on the driver B button. Let button release end it
+    // to avoid cancel/restart loops if we momentarily hit the setpoint while held.
+    return false;
   }
 }
