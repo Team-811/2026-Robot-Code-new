@@ -6,14 +6,14 @@
 //   Right stick X: rotate; deadbands 0.1
 //
 // Speed modes (Drive/SpeedMode on dashboard) - TOGGLES (press once to latch):
-//   Right bumper press toggles Slow (0.5) <-> Normal (0.8)
+//   Right bumper press toggles Slow (0.3) <-> Normal (0.8)
 //   Left bumper  press toggles Fast (1.0) <-> Normal (0.8)
 //   Scale applies to translation and rotation; current mode/scale published to SmartDashboard.
 //
-// LimelightShooter assists (hold-to-run while button held):
+// LimelightShooter assists ('B' Button hold-to-run while button held):
 //   B button: FaceAprilTag (rotate in place to center LL tx on tags 9/11)
-//   Right trigger: CenterToTagOneMeter (drive to ~1 m, center X and yaw)
-//   Left trigger:  AprilTagAim (drive/strafe/yaw to ~0.3048 m, slow near goal)
+//   Right trigger: ShootToAprilTag (shoot balls to targeted AprilTag based on distance)
+//   Left trigger:  ShootToAprilTag (shoot balls to targeted AprilTag based on distance)
 //   Note: FaceAprilTag forces TAG_PIPELINE_INDEX and filters to TARGET_TAG_IDS (9,11 by default).
 //
 // Start button: reseed field-centric heading when pressed alone.
@@ -86,7 +86,7 @@ public class RobotContainer {
   private final SlewRateLimiter slewLimX = new SlewRateLimiter(2.0);
   private final SlewRateLimiter slewLimRote = new SlewRateLimiter(1.0);
 
-  private final LimelightShooter limeShooter = new LimelightShooter(); // primary LL (scoring/AprilTag aim)
+  private final LimelightShooter limeShooter = new LimelightShooter(); // primary LL4 (scoring/AprilTag aim)
   private final LimelightClimber limeClimber = new LimelightClimber(); // secondary LL4 for climber/stage
   private final Shooter shooter = new Shooter();
   private final CandleLED candle = new CandleLED(Constants.CANdleConstants.candleCanId, Constants.CANdleConstants.ledCount);

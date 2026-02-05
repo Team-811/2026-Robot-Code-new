@@ -13,7 +13,6 @@ import frc.robot.subsystems.Shooter;
  */
 public class ShootToAprilTag extends Command {
   private final Shooter shooter;
-  private final LimelightShooter limelight;
 
   // Distance (ft) -> top percent, bottom percent. Tune to your shooter/ballistics.
   // Entries are sorted and will be linearly interpolated for smooth RPM changes.
@@ -29,7 +28,6 @@ public class ShootToAprilTag extends Command {
 
   public ShootToAprilTag(Shooter shooter, LimelightShooter limelight) {
     this.shooter = shooter;
-    this.limelight = limelight;
     addRequirements(shooter, limelight);
   }
 

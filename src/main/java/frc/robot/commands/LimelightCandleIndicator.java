@@ -14,7 +14,6 @@ import frc.robot.subsystems.LimelightShooter;
  * - Owns the CandleLED requirement so no other command can fight over LED colors.
  */
 public class LimelightCandleIndicator extends Command {
-  private final LimelightShooter limelight;
   private final CandleLED candle;
   private final int watchedPipeline;
 
@@ -24,7 +23,6 @@ public class LimelightCandleIndicator extends Command {
    * @param watchedPipeline Pipeline index we care about; only light up when this is active.
    */
   public LimelightCandleIndicator(LimelightShooter limelight, CandleLED candle, int watchedPipeline) {
-    this.limelight = limelight;
     this.candle = candle;
     this.watchedPipeline = watchedPipeline;
     addRequirements(candle); // Prevent competing LED commands.

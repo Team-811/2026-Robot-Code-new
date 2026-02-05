@@ -23,7 +23,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 public class FaceAprilTag extends Command {
 
   private final CommandSwerveDrivetrain myDrivetrain;
-  private final LimelightShooter limelight;
   private final PIDController yawPID;
   private final SwerveRequest.FieldCentric driveRequest = new SwerveRequest.FieldCentric();
 
@@ -42,7 +41,6 @@ public class FaceAprilTag extends Command {
 
   public FaceAprilTag(CommandSwerveDrivetrain drivetrain, LimelightShooter limelight) {
     myDrivetrain = drivetrain;
-    this.limelight = limelight;
     // PID: stronger P/D for quicker arrest, small I to trim bias, continuous input for wrap.
     yawPID = new PIDController(1.4, 0.05, 0.18);
     yawPID.setSetpoint(0.0); // zero tx => aimed at tag
@@ -82,7 +80,7 @@ public class FaceAprilTag extends Command {
     double omegaRad = Units.degreesToRadians(MathUtil.clamp(omegaDeg, -MAX_ROTATE_DEG_PER_SEC, MAX_ROTATE_DEG_PER_SEC));
     omegaRad = omegaSlew.calculate(omegaRad);
 
-    double pidErrorDeg = yawPID.getPositionError();
+    double pidErrorDeg = yawPID.getError();
     boolean atSetpoint = yawPID.atSetpoint();
     double tv = LimelightShooter.getTV();
     double pipeline = LimelightHelpers.getCurrentPipelineIndex(LimelightShooter.LL_NAME);
