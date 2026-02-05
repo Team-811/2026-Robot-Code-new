@@ -18,13 +18,13 @@ import frc.robot.LimelightHelpers;
  * Thin wrapper around the Limelight NetworkTables/JSON helpers.
  * Periodically snapshots Limelight values into static fields for easy access by commands.
  * Notes:
-+ * - Assumes Limelight name "limelight-lime"; change here if your table name differs.
++ * - Assumes Limelight name "limelight-shooter"; change here if your table name differs.
  * - Data is only fresh when this subsystem is scheduled; keep it registered in the robot container.
  * - Fields are static for simplicity; if you add more cameras, refactor to instance state to avoid collisions.
  */
 public class LimelightShooter extends SubsystemBase{
     // Public so commands can refer to the correct NetworkTables instance / pipeline.
-    public static final String LL_NAME = "limelight-Shooter";
+    public static final String LL_NAME = "limelight-shooter";
     NetworkTable table2;
     static double x, y, area, distX, distY, distZ, angleTargetRadians, v, robotYaw;
     int fiducialID;
