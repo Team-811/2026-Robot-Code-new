@@ -22,7 +22,7 @@ public class CandleLED extends SubsystemBase {
   public CandleLED(int canId, int ledCount) {
     this.ledCount = ledCount;
     // Use the default CAN bus ("rio") unless you wired a second bus.
-    candle = new CANdle(canId, "rio");
+    candle = new CANdle(canId);
 
     // Configure once up front so later calls can just set colors.
     CANdleConfiguration config = new CANdleConfiguration();
@@ -34,7 +34,7 @@ public class CandleLED extends SubsystemBase {
   }
 
   private void setColor(RGBWColor color) {
-    candle.setControl(new SolidColor(0, ledCount).withColor(color));
+    candle.setControl(new SolidColor(0, Math.max(0, ledCount - 1)).withColor(color));
   }
 
   /** Set the full strip to solid green. */
