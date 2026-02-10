@@ -1,15 +1,15 @@
 package frc.robot.subsystems;
 
-import com.ctre.phoenix.led.CANdle;
-import com.ctre.phoenix.led.CANdleConfiguration;
+import com.ctre.phoenix6.configs.CANdleConfiguration;
+import com.ctre.phoenix6.hardware.CANdle;
+import com.ctre.phoenix6.controls.SolidColor;
+import com.ctre.phoenix6.signals.RGBWColor;
+import com.ctre.phoenix6.signals.StatusLedWhenActiveValue;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 /**
  * Thin wrapper around the CTRE CANdle so commands can set status LEDs safely.
- * Design choices:
- * - Configure once in the constructor (brightness, strip type) to keep runtime code simple.
- * - Provide small helpers for "green" and "off" so calling code reads clearly.
- * - Expose a simple animation for future debugging (disabled by default).
+ * Updated to Phoenix 6 CANdle APIs (2026 season).
  */
 public class CandleLED extends SubsystemBase {
   private final CANdle candle;
@@ -26,31 +26,34 @@ public class CandleLED extends SubsystemBase {
 
     // Configure once up front so later calls can just set colors.
     CANdleConfiguration config = new CANdleConfiguration();
-    config.brightnessScalar = 1.0;            // Full brightness; tune down if too bright.
-    config.statusLedOffWhenActive = true;     // Hide the CANdle’s own status LED when driving the strip.
-    candle.configAllSettings(config, 100);
+    config.LED.BrightnessScalar = 1.0; // Full brightness; tune down if too bright.
+    config.CANdleFeatures.StatusLedWhenActive = StatusLedWhenActiveValue.Disabled;
+    candle.getConfigurator().apply(config, 0.1);
 
     setOff(); // Start dark so we never blind drivers at boot.
   }
 
+  private void setColor(RGBWColor color) {
+    candle.setControl(new SolidColor(0, ledCount).withColor(color));
+  }
+
   /** Set the full strip to solid green. */
   public void setGreen() {
-    // setLEDs expects RGB (0-255), white (0-255), starting index, and count.
-    candle.setLEDs(0, 255, 0, 0, 0, ledCount);
+    setColor(new RGBWColor(0, 255, 0));
   }
 
   /** Set the full strip to solid red. */
   public void setRed() {
-    candle.setLEDs(255, 0, 0, 0, 0, ledCount);
+    setColor(new RGBWColor(255, 0, 0));
   }
 
   /** Set the full strip to solid yellow (red + green). */
   public void setYellow() {
-    candle.setLEDs(255, 255, 0, 0, 0, ledCount);
+    setColor(new RGBWColor(255, 255, 0));
   }
 
   /** Turn the strip off. */
   public void setOff() {
-    candle.setLEDs(0, 0, 0, 0, 0, ledCount);
+    setColor(new RGBWColor(0, 0, 0));
   }
 }
