@@ -1,11 +1,15 @@
 plugins {
     id "java"
-    id "edu.wpi.first.GradleRIO" version "2025.1.1"
+    id "edu.wpi.first.GradleRIO" version "2026.1.1-beta-1"
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+    
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
 }
 
 def ROBOT_MAIN_CLASS = "frc.robot.Main"
