@@ -224,6 +224,7 @@ public class RobotContainer {
         .and(m_driverController.y().negate())
         .and(m_driverController.x().negate())
         .onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
+     m_driverController.start().onTrue(drivetrain.runOnce(()-> drivetrain.seedFieldCentric()));
         
     // Push live drivetrain telemetry to the log so you can monitor speeds, states, and odometry.
     drivetrain.registerTelemetry(logger::telemeterize);
