@@ -31,7 +31,7 @@ public final class Constants {
     public static final double kJoyRightXDeadzone = kDefaultControllerDeadzone; // Deadband for right stick X axis
     public static final double kJoyLeftXDeadzone = kDefaultControllerDeadzone;  // Deadband for left stick X axis
     public static final double kJoyLeftYDeadzone = kDefaultControllerDeadzone;  // Deadband for left stick Y axis
-
+               
     // Base speed scaler applied to the drivetrain (0-1).
     // USAGE: For SLOW -> Hold right bumper -> slowSpeed (0.5).
     //        For FAST -> Hold left bumper -> fastSpeed (1.0).
@@ -41,7 +41,7 @@ public final class Constants {
     // Driver speed scaling presets
     public static final double fastSpeed     = 1.0; // Driver fast speed preset
     public static final double slowSpeed     = 0.1; // Driver slow speed preset
-    public static final double normalSpeed   = 0.8; // Driver normal speed preset
+    public static final double normalSpeed   = 0.5; // Driver normal speed preset
 
     // Hardware IDs and limits
     public static final double kSlipCurrent  = 120; // Current threshold for slip protection

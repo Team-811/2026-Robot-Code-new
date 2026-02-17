@@ -42,16 +42,24 @@ package frc.robot;
  */
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.FaceAprilTag;
-import frc.robot.commands.ShootToAprilTag;
+// import frc.robot.commands.IndexSpin;
+// import frc.robot.commands.IntakeDown;
+// import frc.robot.commands.IntakeSpin;
+// import frc.robot.commands.IntakeUp;
+// import frc.robot.commands.ShootToAprilTag;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+// import frc.robot.subsystems.Indexer;
+// import frc.robot.subsystems.Intake;
+// import frc.robot.subsystems.IntakeArm;
 import frc.robot.subsystems.LimelightShooter;
 import frc.robot.subsystems.LimelightClimber;
-import frc.robot.subsystems.Shooter;
-import frc.robot.subsystems.CandleLED;
-import frc.robot.commands.LimelightCandleIndicator;
+// import frc.robot.subsystems.Shooter;
+// import frc.robot.subsystems.CandleLED;
+// import frc.robot.commands.LimelightCandleIndicator;
 
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.ctre.phoenix6.swerve.utility.PhoenixPIDController;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -72,25 +80,42 @@ public class RobotContainer {
  private final double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
 
     private final double MaxAngularRate = RotationsPerSecond.of(2.5).in(RadiansPerSecond);
+  // private final Intake intake = new Intake();
+  // private final Indexer indexer = new Indexer();  
+  // private final IntakeArm intakeArm = new IntakeArm();
 
-    private final SwerveRequest.FieldCentric drive =
-        new SwerveRequest.FieldCentric()
-            .withDeadband(0)
-            .withRotationalDeadband(0)
-            .withDriveRequestType(DriveRequestType.Velocity);
+  //  private final SwerveRequest.FieldCentric drive =
+  //       new SwerveRequest.FieldCentric()
+  //           .withDeadband(0)
+  //           .withRotationalDeadband(0)
+  //           .withDriveRequestType(DriveRequestType.Velocity);
+            private final SwerveRequest.FieldCentric drive =
+    new SwerveRequest.FieldCentric()
+        .withDeadband(0.05)
+        .withRotationalDeadband(0.05)
+        .withDriveRequestType(DriveRequestType.Velocity);
+
     
-    private final SwerveRequest.RobotCentric robotCentric = new SwerveRequest.RobotCentric()
-            .withDeadband(0)
-            .withRotationalDeadband(0)
-            .withDriveRequestType(DriveRequestType.Velocity);
+    // private final SwerveRequest.RobotCentric robotCentric = new SwerveRequest.RobotCentric()
+    //         .withDeadband(0)
+    //         .withRotationalDeadband(0)
+    //         .withDriveRequestType(DriveRequestType.Velocity);
+
+            //    private final SwerveRequest.FieldCentricFacingAngle driveFacing= new SwerveRequest.FieldCentricFacingAngle()
+            // .withDeadband(0)
+            // .withRotationalDeadband(0)
+            // .withDriveRequestType(DriveRequestType.Velocity);
 
     private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
 
     private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
+             private final PhoenixPIDController steerController = new PhoenixPIDController(3, 0, 0.05);
 
     private final Telemetry logger = new Telemetry(MaxSpeed);
 
     public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
+    
+
   /** Maximum translational speed (m/s) scaled by operator speed factor. */
   // Base speed scaling constants for the swerve (meters/sec and radians/sec).
   // private final double MaxSpeed =
@@ -106,6 +131,7 @@ public class RobotContainer {
 
   // private final Telemetry logger = new Telemetry(MaxSpeed);
  private static final double DEADBAND = 0.08;
+  // private  double speed = OperatorConstants.kSpeed;
   // Slew limiters tame acceleration in each axis/rotation to keep the robot smooth.
   private final SlewRateLimiter slewLimY = new SlewRateLimiter(2.0);
   private final SlewRateLimiter slewLimX = new SlewRateLimiter(2.0);
@@ -113,8 +139,8 @@ public class RobotContainer {
 
   private final LimelightShooter limeShooter = new LimelightShooter(); // primary LL4 (scoring/AprilTag aim)
   private final LimelightClimber limeClimber = new LimelightClimber(); // secondary LL4 for climber/stage
-  private final Shooter shooter = new Shooter();
-  private final CandleLED candle = new CandleLED(Constants.CANdleConstants.candleCanId, Constants.CANdleConstants.ledCount);
+  // private final Shooter shooter = new Shooter();
+  // private final CandleLED candle = new CandleLED(Constants.CANdleConstants.candleCanId, Constants.CANdleConstants.ledCount);
 
   // Cache last-published driver telemetry to avoid NetworkTables spam.
   private String lastMode;
@@ -133,6 +159,7 @@ public class RobotContainer {
   private boolean sysIdActive = false;
 
   /**
+   * ddddddddd
    * Constructs the robot container: builds subsystems, seeds heading, binds controls, and prepares autos.
    */
   public RobotContainer() {
@@ -175,7 +202,29 @@ public class RobotContainer {
     //                   .withVelocityY(slewLimX.calculate(-joyLeftX()) * MaxSpeed * scale)
     //                   .withRotationalRate(slewLimRote.calculate(-joyRightX()) * MaxAngularRate * scale);
     //             }));
-       drivetrain.setDefaultCommand(
+    // driveFacing.HeadingController = steerController;
+// drivetrain.setDefaultCommand(
+//     drivetrain.applyRequest(() -> {
+
+//         double x = -MathUtil.applyDeadband(
+//             m_driverController.getLeftY(), DEADBAND);
+//         double y = -MathUtil.applyDeadband(
+//             m_driverController.getLeftX(), DEADBAND);
+//         double rot = -MathUtil.applyDeadband(
+//             m_driverController.getRightX(), DEADBAND);
+
+//         double scale = speedScale();
+
+//         return new SwerveRequest.FieldCentric()
+//             .withDeadband(0.05)
+//             .withRotationalDeadband(0.05)
+//             .withDriveRequestType(DriveRequestType.Velocity)
+//             .withVelocityX(x * MaxSpeed * 0.1)
+//             .withVelocityY(y * MaxSpeed * 0.1)
+//             .withRotationalRate(rot * MaxAngularRate * 0.1);
+//     })
+// );
+  drivetrain.setDefaultCommand(
             drivetrain.applyRequest(()-> {
 
                 double x =
@@ -186,29 +235,38 @@ public class RobotContainer {
                     -MathUtil.applyDeadband(m_driverController.getRightX(), DEADBAND);
 
                 return drive
-                    .withVelocityX(x * MaxSpeed)
-                    .withVelocityY(y * MaxSpeed)
-                    .withRotationalRate(rot * MaxAngularRate);
+                    .withVelocityX(x * MaxSpeed*0.1)
+                    .withVelocityY(y * MaxSpeed*0.1)
+                    .withRotationalRate(rot * MaxAngularRate*0.1);
+                   
             })
+            
         );
+         System.out.print(MaxSpeed);
+
+
+
+
  final var idle = new SwerveRequest.Idle();
         RobotModeTriggers.disabled().whileTrue(
             drivetrain.applyRequest(() -> idle).ignoringDisable(true)
         );
     // Default LED indicator: turn CANdle green when shooter Limelight sees a target on the watched pipeline.
-    candle.setDefaultCommand(new LimelightCandleIndicator(limeShooter, candle, Constants.CANdleConstants.pipelineIndex));
+    // candle.setDefaultCommand(new LimelightCandleIndicator(limeShooter, candle, Constants.CANdleConstants.pipelineIndex));
 
     //-- SHOOTER VISION -- Vision-assisted align/target commands.
     // Run face-to-tag only while B is held so driver regains control on release.
     m_driverController.b().whileTrue(new FaceAprilTag(drivetrain, limeShooter));
     // Map right trigger to distance-based shooter feed using Limelight range.
-    m_driverController.rightTrigger().whileTrue(new ShootToAprilTag(shooter, limeShooter));
+    // m_driverController.rightTrigger().whileTrue(new ShootToAprilTag(shooter, limeShooter));
 
     //-- SPEED MODE TOGGLES --
     // Toggle slow mode on right bumper press; press again to return to normal.
-    m_driverController.rightBumper().onTrue(new InstantCommand(this::toggleSlow));
-    // Toggle fast mode on left bumper press; press again to return to normal.
-    m_driverController.leftBumper().onTrue(new InstantCommand(this::toggleFast));
+    // m_driverController.rightBumper().onTrue(new InstantCommand(this::toggleSlow));
+    // // Toggle fast mode on left bumper press; press again to return to normal.
+    // m_driverController.leftBumper().onTrue(new InstantCommand(this::toggleFast));
+        // m_driverController.leftBumper().whileTrue(new InstantCommand(()-> speed = OperatorConstants.fastSpeed));
+        // m_driverController.leftTrigger().whileTrue(new InstantCommand(()-> speed = OperatorConstants.slowSpeed));
     
     //-- CLIMBER VISION -- Vision-assisted align/target commands.
     //driverController.y().whileTrue(new FaceTowerClimber(drivetrain, limeClimber)); //TODO: Implement climber vision command.
@@ -226,6 +284,12 @@ public class RobotContainer {
         .onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
      m_driverController.start().onTrue(drivetrain.runOnce(()-> drivetrain.seedFieldCentric()));
         
+    //  c.x().whileTrue(new IntakeSpin(intake));
+    //  c.a().whileTrue(new IndexSpin(indexer));
+    //  c.leftBumper().whileTrue(new IntakeDown(intakeArm));
+    //  c.rightBumper().whileTrue(new IntakeUp(intakeArm));
+
+    //  c.b().whileTrue(new LimelightCandleIndicator(limeShooter, candle, 0));
     // Push live drivetrain telemetry to the log so you can monitor speeds, states, and odometry.
     drivetrain.registerTelemetry(logger::telemeterize);
   }
@@ -283,24 +347,24 @@ public class RobotContainer {
    * Computes current speed scale based on latched speedMode (toggled via bumpers).
    * @return scalar multiplier applied to translational/rotational commands
    */
-  public double speedScale() {
-    String mode = switch (speedMode) {
-      case SLOW -> "Slow";
-      case FAST -> "Fast";
-      default -> "Normal";
-    };
-    double scale = switch (speedMode) {
-      case SLOW -> Constants.OperatorConstants.slowSpeed;
-      case FAST -> Constants.OperatorConstants.slowSpeed;
-      default -> Constants.OperatorConstants.slowSpeed;
-    };
-    boolean modeChanged = modeChanged(scale, mode);
-    // Debug telemetry: surface current speed mode/scale to the dashboard.
-    pushDriverTelemetry(mode, scale, modeChanged);
-    lastMode = mode;
-    lastScale = scale;
-    return scale;
-  }
+  // public double speedScale() {
+  //   String mode = switch (speedMode) {
+  //     case SLOW -> "Slow";
+  //     case FAST -> "Fast";
+  //     default -> "Normal";
+  //   };
+  //   double scale = switch (speedMode) {
+  //     case SLOW -> Constants.OperatorConstants.slowSpeed;
+  //     case FAST -> Constants.OperatorConstants.slowSpeed;
+  //     default -> Constants.OperatorConstants.slowSpeed;
+  //   };
+  //   boolean modeChanged = modeChanged(scale, mode);
+  //   // Debug telemetry: surface current speed mode/scale to the dashboard.
+  //   pushDriverTelemetry(mode, scale, modeChanged);
+  //   lastMode = mode;
+  //   lastScale = scale;
+  //   return scale;
+  // }
 
   /**
    * Detects if speed mode changed (used to gate telemetry updates).
@@ -341,6 +405,14 @@ public class RobotContainer {
       SmartDashboard.putNumber("Drive/MeasuredOmega", state.Speeds.omegaRadiansPerSecond);
     }
   }
+       public double speedScale(){
+      if(m_driverController.leftBumper().getAsBoolean())
+      return Constants.OperatorConstants.fastSpeed;
+        if(m_driverController.leftTrigger().getAsBoolean())
+      return Constants.OperatorConstants.slowSpeed;
+
+      return Constants.OperatorConstants.normalSpeed;
+     }
 
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
@@ -348,20 +420,21 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-     final var idle = new SwerveRequest.Idle();
+    //  final var idle = new SwerveRequest.Idle();
 
-        return Commands.sequence(
-            drivetrain.runOnce(() ->
-                drivetrain.seedFieldCentric(Rotation2d.kZero)
-            ),
+    //     return Commands.sequence(
+    //         drivetrain.runOnce(() ->
+    //             drivetrain.seedFieldCentric(Rotation2d.kZero)
+    //         ),
 
-            drivetrain.applyRequest(() ->
-                drive.withVelocityX(0.5 * MaxSpeed)
-                     .withVelocityY(0)
-                     .withRotationalRate(0)
-            ).withTimeout(5.0),
+    //         drivetrain.applyRequest(() ->
+    //             drive.withVelocityX(0.5 * MaxSpeed)
+    //                  .withVelocityY(0)
+    //                  .withRotationalRate(0)
+    //         ).withTimeout(5.0),
 
-            drivetrain.applyRequest(() -> idle)
-        );
+    //         drivetrain.applyRequest(() -> idle)
+    //     );
+    return null;
   }
 }

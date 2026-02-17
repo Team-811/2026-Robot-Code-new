@@ -96,6 +96,7 @@ public class LimelightShooter extends SubsystemBase{
     public void periodic(){
         updateValues();
         updateDashboard();
+        
     }
 
     /** True when the Limelight reports a valid target (tv==1). */
