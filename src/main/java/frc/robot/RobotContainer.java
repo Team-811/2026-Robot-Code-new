@@ -42,17 +42,38 @@ package frc.robot;
  */
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.FaceAprilTag;
-// import frc.robot.commands.IndexSpin;
+import frc.robot.commands.shooterCommand;
+import frc.robot.commands.shooterLime;
+import frc.robot.commands.IndexSpin;
 // import frc.robot.commands.IntakeDown;
-// import frc.robot.commands.IntakeSpin;
+import frc.robot.commands.IntakeSpin;
+import frc.robot.commands.closeNeo2;
+// import frc.robot.commands.closeKranken;
+import frc.robot.commands.closeShooter;
+// import frc.robot.commands.leftAuto;
+// import frc.robot.commands.leftDriveAuto;
 // import frc.robot.commands.IntakeUp;
+// import frc.robot.commands.intakeArmCommand;
+// import frc.robot.commands.kShooter;
+import frc.robot.commands.lowerIntake;
+import frc.robot.commands.lowerNeoVortexSpeed;
+// import frc.robot.commands.neoShooterLime;
+import frc.robot.commands.raiseIntake;
+import frc.robot.commands.raiseNeoVortexSpeed;
+import frc.robot.commands.reverseShooter;
 // import frc.robot.commands.ShootToAprilTag;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
-// import frc.robot.subsystems.Indexer;
-// import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.Indexer;
+import frc.robot.subsystems.Intake;
 // import frc.robot.subsystems.IntakeArm;
 import frc.robot.subsystems.LimelightShooter;
+import frc.robot.subsystems.Shooter;
+import frc.robot.subsystems.intakeForNow;
+// import frc.robot.subsystems.neoShooterWithLime;
+// import frc.robot.subsystems.krakenShooter;
+// import frc.robot.subsystems.shooterKraken;              
+import frc.robot.subsystems.shooterNeoVortex;
 import frc.robot.subsystems.LimelightClimber;
 // import frc.robot.subsystems.Shooter;
 // import frc.robot.subsystems.CandleLED;
@@ -61,6 +82,7 @@ import frc.robot.subsystems.LimelightClimber;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.utility.PhoenixPIDController;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.auto.AutoBuilder;
 
@@ -80,9 +102,10 @@ public class RobotContainer {
  private final double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
 
     private final double MaxAngularRate = RotationsPerSecond.of(2.5).in(RadiansPerSecond);
-  // private final Intake intake = new Intake();
-  // private final Indexer indexer = new Indexer();  
+  private final Intake intake = new Intake();
+  private final Indexer indexer = new Indexer();  
   // private final IntakeArm intakeArm = new IntakeArm();
+  private final intakeForNow intakeArm = new intakeForNow();
 
   //  private final SwerveRequest.FieldCentric drive =
   //       new SwerveRequest.FieldCentric()
@@ -106,10 +129,10 @@ public class RobotContainer {
             // .withRotationalDeadband(0)
             // .withDriveRequestType(DriveRequestType.Velocity);
 
-    private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
+    // private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake();
 
-    private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
-             private final PhoenixPIDController steerController = new PhoenixPIDController(3, 0, 0.05);
+    // private final SwerveRequest.PointWheelsAt point = new SwerveRequest.PointWheelsAt();
+    //          private final PhoenixPIDController steerController = new PhoenixPIDController(3, 0, 0.05);
 
     private final Telemetry logger = new Telemetry(MaxSpeed);
 
@@ -137,8 +160,15 @@ public class RobotContainer {
   private final SlewRateLimiter slewLimX = new SlewRateLimiter(2.0);
   private final SlewRateLimiter slewLimRote = new SlewRateLimiter(1.0);
 
+  // private final shooterKraken shooterK = new shooterKraken();
+  // private final krakenShooter shooterK = new krakenShooter();
+  private final Shooter shooter = new Shooter();
+  private final shooterNeoVortex shooterN = new shooterNeoVortex();
+  // private final neoShooterWithLime shooterN = new neoShooterWithLime();
+
+
   private final LimelightShooter limeShooter = new LimelightShooter(); // primary LL4 (scoring/AprilTag aim)
-  private final LimelightClimber limeClimber = new LimelightClimber(); // secondary LL4 for climber/stage
+  // private final LimelightClimber limeClimber = new LimelightClimber(); // secondary LL4 for climber/stage
   // private final Shooter shooter = new Shooter();
   // private final CandleLED candle = new CandleLED(Constants.CANdleConstants.candleCanId, Constants.CANdleConstants.ledCount);
 
@@ -147,6 +177,11 @@ public class RobotContainer {
   private Double lastScale;
   private enum SpeedMode { SLOW, NORMAL, FAST }
   private SpeedMode speedMode = SpeedMode.NORMAL;
+
+  // private final SwerveRequest.FieldCentric m_driveRequest = new SwerveRequest.FieldCentric()
+  //  .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
+  //  .withDriveRequestType(DriveRequestType.OpenLoopVoltage)
+  //  .withSteerRequestType(SteerRequestType.Position);
 
   // public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
@@ -173,13 +208,13 @@ public class RobotContainer {
     try {
       chooser = AutoBuilder.buildAutoChooser();
       // Register available autos; "midL4x1" is treated as optional.
-      chooser.setDefaultOption("Do Nothing", new InstantCommand());
-      chooser.addOption("Ex Auto", new PathPlannerAuto("Ex Auto"));
+      // chooser.setDefaultOption("leftAuto", new leftAuto(drivetrain, shooterN, shooter, intakeArm, indexer, intake, limeShooter));
+      // chooser.addOption("leftDrive", new leftDriveAuto(drivetrain, shooterN, shooter, limeShooter));
       chooser.addOption("midL4x1 (if present)", new PathPlannerAuto("midL4x1"));
     } catch (Exception ex) {
       // Fall back to a safe chooser if PathPlanner assets are missing.
       chooser = new SendableChooser<>();
-      chooser.setDefaultOption("Do Nothing", new InstantCommand());
+     //chooser.setDefaultOption("leftAuto", new leftAuto(drivetrain, shooterN, shooter, intakeArm, indexer, intake, limeShooter));
       SmartDashboard.putString("Mode/autoChooser/Error", "PathPlanner chooser failed: " + ex.getMessage());
     }
     autoChooser = chooser;
@@ -187,10 +222,23 @@ public class RobotContainer {
     SmartDashboard.putData("Mode/autoChooser", autoChooser);
   }
 
+// public void periodic() {
+//    // Note that X is defined as forward according to WPILib convention,
+//    // and Y is defined as to the left according to WPILib convention.
+//    System.out.println(-m_driverController.getLeftY());
+//    System.out.println(-m_driverController.getLeftX());
+//    System.out.println(-m_driverController.getRightX());
+//    drivetrain.setControl(
+//       m_driveRequest.withVelocityX(-m_driverController.getLeftY() * MaxSpeed)
+//          .withVelocityY(-m_driverController.getLeftX() * MaxSpeed)
+//          .withRotationalRate((-m_driverController.getRightX() * MaxAngularRate)*0.1)
+//    );
+// }
   /**
    * Wire driver controls to commands. Sets the default drive command and bindings for vision and SysId.
    */
   private void configureBindings() {
+    
     // Default command: field-centric drive with slew-limited joystick input.
     // drivetrain.setDefaultCommand(
     //     drivetrain.applyRequest(
@@ -213,37 +261,90 @@ public class RobotContainer {
 //         double rot = -MathUtil.applyDeadband(
 //             m_driverController.getRightX(), DEADBAND);
 
+//         return new SwerveRequest.RobotCentric()
+//             .withDeadband(0)
+//             .withRotationalDeadband(0)
+//             .withDriveRequestType(DriveRequestType.Velocity)
+//             .withVelocityX(x * MaxSpeed*0.1)
+//             .withVelocityY(y * MaxSpeed*0.1)
+//             .withRotationalRate(rot * MaxAngularRate*0.1);
+//     })
+// );
+  // drivetrain.setDefaultCommand(
+  //   drivetrain.applyRequest(()-> {
+
+  //       double x = 
+        
+  //         //slewLimX.calculate(m_driverController.getLeftX());
+  //         -MathUtil.applyDeadband(m_driverController.getLeftY(), DEADBAND);
+  //            System.out.print(x); 
+  //       double y =
+         
+  //         //slewLimY.calculate(m_driverController.getLeftY());
+  //         -MathUtil.applyDeadband(m_driverController.getLeftX(), DEADBAND);
+  //            System.out.print(y); 
+  //       double rot = 
+        
+  //         //slewLimRote.calculate(m_driverController.getRightX());
+  //         -MathUtil.applyDeadband(m_driverController.getRightX(), DEADBAND); 
+
+  //       return drive
+  //           .withVelocityX(x * MaxSpeed*0.1)
+  //           .withVelocityY(y * MaxSpeed*0.1)
+  //           .withRotationalRate(rot * MaxAngularRate*0.1);
+  //   })
+  // );
+  // System.out.print(MaxSpeed); 
+//   drivetrain.setDefaultCommand(
+//     drivetrain.applyRequest(() -> {
+
+//         double x = -MathUtil.applyDeadband(m_driverController.getLeftY(), DEADBAND);
+//         double y = -MathUtil.applyDeadband(m_driverController.getLeftX(), DEADBAND);
+//         double rot = -MathUtil.applyDeadband(m_driverController.getRightX(), DEADBAND);
+
 //         double scale = speedScale();
 
 //         return new SwerveRequest.FieldCentric()
 //             .withDeadband(0.05)
 //             .withRotationalDeadband(0.05)
 //             .withDriveRequestType(DriveRequestType.Velocity)
-//             .withVelocityX(x * MaxSpeed * 0.1)
-//             .withVelocityY(y * MaxSpeed * 0.1)
-//             .withRotationalRate(rot * MaxAngularRate * 0.1);
+//             .withVelocityX(x * MaxSpeed * scale)
+//             .withVelocityY(y * MaxSpeed * scale)
+//             .withRotationalRate(rot * MaxAngularRate * scale);
 //     })
 // );
-  drivetrain.setDefaultCommand(
-            drivetrain.applyRequest(()-> {
+// drivetrain.setDefaultCommand(
+//     drivetrain.applyRequest(() -> {
 
-                double x =
-                    -MathUtil.applyDeadband(m_driverController.getLeftY(), DEADBAND);
-                double y =
-                    -MathUtil.applyDeadband(m_driverController.getLeftX(), DEADBAND);
-                double rot =
-                    -MathUtil.applyDeadband(m_driverController.getRightX(), DEADBAND);
+//         double x = -MathUtil.applyDeadband(m_driverController.getLeftY(), 0.08);
+//         double y = -MathUtil.applyDeadband(m_driverController.getLeftX(), 0.08);
+//         double rot = -MathUtil.applyDeadband(m_driverController.getRightX(), 0.08);
 
-                return drive
-                    .withVelocityX(x * MaxSpeed*0.1)
-                    .withVelocityY(y * MaxSpeed*0.1)
-                    .withRotationalRate(rot * MaxAngularRate*0.1);
-                   
-            })
-            
-        );
-         System.out.print(MaxSpeed);
+//         return new SwerveRequest.RobotCentric()
+//             .withDriveRequestType(DriveRequestType.Velocity)
+//             .withVelocityX(x * MaxSpeed * 0.3)
+//             .withVelocityY(y * MaxSpeed * 0.3)
+//             .withRotationalRate(rot * MaxAngularRate * 0.3);
+//     })
+// );
 
+drivetrain.setDefaultCommand(
+    drivetrain.applyRequest(() -> {
+
+        double x = slewLimX.calculate(-MathUtil.applyDeadband(m_driverController.getLeftY(), DEADBAND));
+        double y = slewLimY.calculate(-MathUtil.applyDeadband(m_driverController.getLeftX(), DEADBAND));
+        double rot = slewLimRote.calculate(-MathUtil.applyDeadband(m_driverController.getRightX(), DEADBAND));
+
+        return new SwerveRequest.FieldCentric()
+            .withDriveRequestType(DriveRequestType.Velocity)
+            .withVelocityX(x * MaxSpeed * 0.5)
+            .withVelocityY(y * MaxSpeed * 0.5)
+            .withRotationalRate(rot * MaxAngularRate * 0.3);
+    })
+);
+
+
+    // intakeArm.setDefaultCommand(new intakeArmCommand(intakeArm));
 
 
 
@@ -272,23 +373,42 @@ public class RobotContainer {
     //driverController.y().whileTrue(new FaceTowerClimber(drivetrain, limeClimber)); //TODO: Implement climber vision command.
 
     // SysId bindings to characterize drivetrain when requested.
-    m_driverController.start().and(m_driverController.y())
-        .whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward).finallyDo((interrupted) -> sysIdActive = false))
-        .onTrue(new InstantCommand(() -> sysIdActive = true));
-    m_driverController.start().and(m_driverController.x())
-        .whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse).finallyDo((interrupted) -> sysIdActive = false))
-        .onTrue(new InstantCommand(() -> sysIdActive = true));
+    // m_driverController.start().and(m_driverController.y())
+    //     .whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward).finallyDo((interrupted) -> sysIdActive = false))
+    //     .onTrue(new InstantCommand(() -> sysIdActive = true));
+    // m_driverController.start().and(m_driverController.x())
+    //     .whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse).finallyDo((interrupted) -> sysIdActive = false))
+    //     .onTrue(new InstantCommand(() -> sysIdActive = true));
     m_driverController.start()
         .and(m_driverController.y().negate())
         .and(m_driverController.x().negate())
         .onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
      m_driverController.start().onTrue(drivetrain.runOnce(()-> drivetrain.seedFieldCentric()));
+         m_driverController.back().onTrue(drivetrain.runOnce(()-> drivetrain.seedFieldCentric()));
         
-    //  c.x().whileTrue(new IntakeSpin(intake));
-    //  c.a().whileTrue(new IndexSpin(indexer));
+     
+
+     c.b().whileTrue(new IntakeSpin(intake));
+     c.a().whileTrue(new IndexSpin(indexer));
+     c.y().whileTrue(new closeNeo2(shooterN));
+     c.leftBumper().whileTrue(new raiseIntake(intakeArm));
+    c.rightBumper().whileTrue(new lowerIntake(intakeArm));
+   
     //  c.leftBumper().whileTrue(new IntakeDown(intakeArm));
     //  c.rightBumper().whileTrue(new IntakeUp(intakeArm));
+    // c.leftBumper().onTrue(new IntakeDown(intakeArm));
+    // c.rightBumper().onTrue(new IntakeUp(intakeArm));
 
+
+    
+    c.leftTrigger().whileTrue(new shooterCommand(shooterN));
+    //  c.rightTrigger().whileTrue(new kShooter(shooterK)); 
+    c.x().whileTrue(new closeShooter(shooterN));
+    // c.y().whileTrue(new closeKranken(shooterK));
+    c.rightTrigger().whileTrue(new shooterLime(shooter));
+    // c.start().whileTrue(new reverseShooter(shooterN));
+    c.povUp().whileTrue(new raiseNeoVortexSpeed());
+    c.povDown().whileTrue(new lowerNeoVortexSpeed());
     //  c.b().whileTrue(new LimelightCandleIndicator(limeShooter, candle, 0));
     // Push live drivetrain telemetry to the log so you can monitor speeds, states, and odometry.
     drivetrain.registerTelemetry(logger::telemeterize);
@@ -298,13 +418,13 @@ public class RobotContainer {
    * Driver right stick X with deadband applied.
    * @return rotation input in -1..1, zeroed inside deadband
    */
-  public double joyRightX() {
-    double rightX = m_driverController.getRightX();
-    if (Math.abs(rightX) > OperatorConstants.kJoyRightXDeadzone) {
-      return rightX;
-    }
-    return 0;
-  }
+  // public double joyRightX() {
+  //   double rightX = m_driverController.getRightX();
+  //   if (Math.abs(rightX) > OperatorConstants.kJoyRightXDeadzone) {
+  //     return rightX;
+  //   }
+  //   return 0;
+  // }
 
   // Toggle helpers to latch speed mode on bumper presses.
   private void toggleSlow() {
@@ -321,25 +441,25 @@ public class RobotContainer {
    * Driver left stick X with deadband applied.
    * @return strafe input in -1..1, zeroed inside deadband
    */
-  public double joyLeftX() {
-    double leftX = m_driverController.getLeftX();
-    if (Math.abs(leftX) > OperatorConstants.kJoyLeftXDeadzone) {
-      return leftX;
-    }
-    return 0;
-  }
+  // public double joyLeftX() {
+  //   double leftX = m_driverController.getLeftX();
+  //   if (Math.abs(leftX) > OperatorConstants.kJoyLeftXDeadzone) {
+  //     return leftX;
+  //   }
+  //   return 0;
+  // }
 
   /**
    * Driver left stick Y with deadband applied.
    * @return forward/back input in -1..1, zeroed inside deadband
    */
-  public double joyLeftY() {
-    double leftY = m_driverController.getLeftY();
-    if (Math.abs(leftY) > OperatorConstants.kJoyLeftYDeadzone) {
-      return leftY;
-    }
-    return 0;
-  }
+  // public double joyLeftY() {
+  //   double leftY = m_driverController.getLeftY();
+  //   if (Math.abs(leftY) > OperatorConstants.kJoyLeftYDeadzone) {
+  //     return leftY;
+  //   }
+  //   return 0;
+  // }
 
 
   // Variable speed scaling based on bumper state (fast/slow/normal) to tame driver inputs.
@@ -391,9 +511,9 @@ public class RobotContainer {
     }
     SmartDashboard.putNumber("Drive/RotationScale", scale);
     SmartDashboard.putBoolean("SysId/Running", sysIdActive);
-    SmartDashboard.putNumber("Joystick/LeftX", joyLeftX());
-    SmartDashboard.putNumber("Joystick/LeftY", joyLeftY());
-    SmartDashboard.putNumber("Joystick/RightX", joyRightX());
+    // SmartDashboard.putNumber("Joystick/LeftX", joyLeftX());
+    // SmartDashboard.putNumber("Joystick/LeftY", joyLeftY());
+    // SmartDashboard.putNumber("Joystick/RightX", joyRightX());
 
     var state = drivetrain.getState();
     if (state != null) {
@@ -435,6 +555,9 @@ public class RobotContainer {
 
     //         drivetrain.applyRequest(() -> idle)
     //     );
-    return null;
+    // // return null;
+
+    return autoChooser.getSelected();
+
   }
 }

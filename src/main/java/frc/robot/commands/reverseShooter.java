@@ -1,27 +1,33 @@
 package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.Indexer;
-public class IndexSpin extends Command{
 
-    Indexer spinney;
-    public IndexSpin(Indexer spinney){
-        this.spinney = spinney;
-        addRequirements(spinney);
+import frc.robot.subsystems.shooterNeoVortex;
+
+public class reverseShooter extends Command{
+   shooterNeoVortex shooter;
+    public reverseShooter(shooterNeoVortex shooter){
+     
+        this.shooter = shooter;
+
+    addRequirements(shooter);
     }
- @Override
-  public void initialize() {}
+      @Override
+  public void initialize() {
+    //yuh
+  }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    spinney.spin();
+     shooter.spinTheOtherWay();
+  
   }
-
+ 
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-    spinney.dontspin();
+     shooter.ssssssswirly_whirly_stop();    
   }
 
   // Returns true when the command should end.
@@ -29,5 +35,4 @@ public class IndexSpin extends Command{
   public boolean isFinished() {
     return false;
   }
-
 }

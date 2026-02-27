@@ -1,37 +1,38 @@
 // package frc.robot.commands;
-// import frc.robot.subsystems.IntakeArm;
+
 // import edu.wpi.first.wpilibj2.command.Command;
+// import frc.robot.subsystems.krakenShooter;
 
-// public class IntakeUp extends Command {
+// public class closeKranken extends Command{
+//      krakenShooter shooter;
+//     public closeKranken(krakenShooter shooter){
+//         this.shooter = shooter;
 
-//     private IntakeArm in;
-//     public IntakeUp(IntakeArm in){
-//         this.in = in;
-//         addRequirements(in);
-        
+//     addRequirements(shooter);
 //     }
-//      @Override
+//       @Override
 //   public void initialize() {
-//     // in.pivotGo(0);
-//     in.setPosition(0);
+//     //yuh
 //   }
 
 //   // Called every time the scheduler runs while the command is scheduled.
 //   @Override
 //   public void execute() {
-
+//     shooter.closeSpin();
+  
 //   }
-
+ 
 //   // Called once the command ends or is interrupted.
 //   @Override
 //   public void end(boolean interrupted) {
-//     // in.stop();
+//     shooter.stop();
 //   }
 
 //   // Returns true when the command should end.
 //   @Override
 //   public boolean isFinished() {
-//     return true;
+//     return false;
 //   }
+
 
 // }

@@ -11,7 +11,8 @@
 //     }
 //      @Override
 //   public void initialize() {
-//     in.pivotGo(10);
+//     // in.pivotGo(3);
+//     in.setPosition(2);
 //   }
 
 //   // Called every time the scheduler runs while the command is scheduled.
@@ -23,7 +24,7 @@
 //   // Called once the command ends or is interrupted.
 //   @Override
 //   public void end(boolean interrupted) {
-//     in.stop();
+//     // in.stop();
 //   }
 
 //   // Returns true when the command should end.
