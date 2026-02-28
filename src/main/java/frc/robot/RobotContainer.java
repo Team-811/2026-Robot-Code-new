@@ -406,7 +406,7 @@ drivetrain.setDefaultCommand(
     c.x().whileTrue(new closeShooter(shooterN));
     // c.y().whileTrue(new closeKranken(shooterK));
     c.rightTrigger().whileTrue(new shooterLime(shooter));
-    // c.start().whileTrue(new reverseShooter(shooterN));
+    c.start().whileTrue(new reverseShooter(shooterN));
     c.povUp().whileTrue(new raiseNeoVortexSpeed());
     c.povDown().whileTrue(new lowerNeoVortexSpeed());
     //  c.b().whileTrue(new LimelightCandleIndicator(limeShooter, candle, 0));

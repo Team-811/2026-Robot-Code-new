@@ -1,113 +1,3 @@
-// package frc.robot.subsystems;
-
-// import com.ctre.phoenix6.controls.DutyCycleOut;
-// import com.ctre.phoenix6.hardware.TalonFX;
-
-// import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-// import edu.wpi.first.wpilibj2.command.SubsystemBase;
-// import frc.robot.Constants;
-
-// /**
-//  * Simple two-motor shooter subsystem. Accepts percent outputs for top/bottom motors and
-//  * publishes the last commanded values for debugging.
-//  */
-// public class Shooter extends SubsystemBase {
-//   private final TalonFX topMotor = new TalonFX(Constants.OperatorConstants.shooterTopId);
-//   private final TalonFX bottomMotor = new TalonFX(Constants.OperatorConstants.shooterBottomId);
-//   private final DutyCycleOut topDuty = new DutyCycleOut(0);
-//   private final DutyCycleOut bottomDuty = new DutyCycleOut(0);
-
-//   private double lastTop = 0.0;
-//   private double lastBottom = 0.0;
-
-//   /**
-//    * Set percent outputs for the shooter motors. Inputs are clamped to [-1, 1] to protect the
-//    * controllers if callers overshoot while tuning. Values are stored for dashboard visibility.
-//    */
-//   public void setPercents(double topPercent, double bottomPercent) {
-//     lastTop = clamp(topPercent);
-//     lastBottom = clamp(bottomPercent);
-//     topMotor.setControl(topDuty.withOutput(lastTop));
-//     bottomMotor.setControl(bottomDuty.withOutput(lastBottom));
-//   }
-
-//   /** Stop both shooter motors. */
-//   public void stop() {
-//     setPercents(0.0, 0.0);
-//   }
-
-//   @Override
-//   public void periodic() {
-//     SmartDashboard.putNumber("Shooter/TopPercent", lastTop);
-//     SmartDashboard.putNumber("Shooter/BottomPercent", lastBottom);
-//   }
-
-//   private double clamp(double value) {
-//     return Math.max(-1.0, Math.min(1.0, value));
-//   }
-// }
-// // package frc.robot.subsystems;
-
-// // import com.ctre.phoenix6.configs.Slot0Configs;
-// // import com.ctre.phoenix6.controls.VelocityVoltage;
-// // import com.ctre.phoenix6.hardware.TalonFX;
-
-// // import edu.wpi.first.networktables.NetworkTableInstance;
-// // import edu.wpi.first.wpilibj2.command.SubsystemBase;
-
-// // public class theActualShooter extends SubsystemBase{
-
-// //     TalonFX intakee;
-// //     private final double cH = 0;
-// //     private final double H = 0; // change to measured values later
-// //     private final VelocityVoltage velo = new VelocityVoltage(0);
-// //     private final double targetV;
-// //     public theActualShooter(){
-// //         intakee = new TalonFX(54);
-
-// //           Slot0Configs slot0 = new Slot0Configs();
-// //         slot0.kP = 0.12;
-// //         slot0.kI = 0.0;
-// //         slot0.kD = 0.0;
-// //         slot0.kV = 0.0; // feedforward
-
-// //         intakee.getConfigurator().apply(slot0);
-// //             double ty = NetworkTableInstance.getDefault()
-// //         .getTable("limelight-lime")
-// //         .getEntry("ty")
-// //         .getDouble(0);
-
-// //         double distance = (H - cH)/Math.tan(Math.toRadians(ty));
-// //         targetV = getSpeed(distance);
-
-// //         intakee.getConfigurator().apply(slot0);
-// //     }
-// //         public void go(){
-// //         // intakee.set(0.25);
-// //         intakee.setControl(velo.withVelocity(targetV));
-  
-// //     }
-// //     public double getSpeed(double distance){
-// //         if(distance < 0) // change to tested value
-// //             return 0;
-// //         else if(distance < 0)
-// //             return 0; //if need add more if statments
-// //         else 
-// //             return 0;
-// //     }
-// //     // public void goTheOtherWay(){
-// //     //     intakee.set(-1);
-    
-// //     // }
-// //     public void stopIntake(){
-// //         intakee.set(0);
-  
-// //     }
-// //     @Override
-// //     public void periodic(){
-
-// //     }
-// }
 package frc.robot.subsystems;
 
 import com.ctre.phoenix6.configs.Slot0Configs;
@@ -151,10 +41,10 @@ public class Shooter extends SubsystemBase {
 
         shooterMotor.getConfigurator().apply(slot0);
 
-        // distanceToRPM.put(1.0, -500.0);
+        distanceToRPM.put(1.0, -700.0);
         // distanceToRPM.put(2.5, -3500.0);
-        distanceToRPM.put(2.0, -2000.0);
-        // distanceToRPM.put(3.0, -2000.0);
+        distanceToRPM.put(2.0, -1800.0);
+        distanceToRPM.put(3.0, -2500.0);
     }
 
     public void runShooterWithLimelight() {

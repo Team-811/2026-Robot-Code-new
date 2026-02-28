@@ -23,8 +23,8 @@ public class shooterNeoVortex extends SubsystemBase {
         what2.set(0.3);
     }
     public void close2(){
-        what.set(0.1);
-        what2.set(0.1);
+        what.set(0.5);
+        what2.set(0.5);
     }
 
     public void ssssssswirly_whirly_stop(){
