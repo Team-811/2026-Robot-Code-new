@@ -21,6 +21,8 @@ public class Shooter extends SubsystemBase {
     private static final double TARGET_HEIGHT = 2.10;
     private static final double LIMELIGHT_ANGLE = Units.degreesToRadians(25);
 
+    private static final double defaultSpeed = 1800;
+
     private static final double VELOCITY_TOLERANCE_RPS = 1.5;
 
     private final NetworkTable limelightTable =
@@ -41,7 +43,7 @@ public class Shooter extends SubsystemBase {
 
         shooterMotor.getConfigurator().apply(slot0);
 
-        distanceToRPM.put(1.0, -700.0);
+        distanceToRPM.put(1.0, -750.0);
         // distanceToRPM.put(2.5, -3500.0);
         distanceToRPM.put(2.0, -1800.0);
         distanceToRPM.put(3.0, -2500.0);
@@ -66,8 +68,9 @@ public class Shooter extends SubsystemBase {
 
     private double getDistanceMeters() {
         boolean hasTarget = limelightTable.getEntry("tv").getDouble(0) == 1;
-        if (!hasTarget) return -1;
-
+        if (!hasTarget) 
+            targetRPM = defaultSpeed;
+        
         double ty = limelightTable.getEntry("ty").getDouble(0);
 
         return (TARGET_HEIGHT - LIMELIGHT_HEIGHT) /
@@ -95,6 +98,6 @@ public void periodic() {
         .getEntry("tv")
         .getDouble(0);
 
-    System.out.println("Limelight tv: " + tv);
+    // System.out.println("Limelight tv: " + tv);
 }
 }

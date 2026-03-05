@@ -50,8 +50,10 @@ import frc.robot.commands.IntakeSpin;
 import frc.robot.commands.closeNeo2;
 // import frc.robot.commands.closeKranken;
 import frc.robot.commands.closeShooter;
-// import frc.robot.commands.leftAuto;
-// import frc.robot.commands.leftDriveAuto;
+import frc.robot.commands.leftAuto;
+import frc.robot.commands.leftDriveAuto;
+import frc.robot.commands.leftAuto;
+import frc.robot.commands.leftDriveAuto;
 // import frc.robot.commands.IntakeUp;
 // import frc.robot.commands.intakeArmCommand;
 // import frc.robot.commands.kShooter;
@@ -69,13 +71,9 @@ import frc.robot.subsystems.Intake;
 // import frc.robot.subsystems.IntakeArm;
 import frc.robot.subsystems.LimelightShooter;
 import frc.robot.subsystems.Shooter;
-import frc.robot.subsystems.intakeForNow;
-// import frc.robot.subsystems.neoShooterWithLime;
-// import frc.robot.subsystems.krakenShooter;
-// import frc.robot.subsystems.shooterKraken;              
+import frc.robot.subsystems.intakeForNow;       
 import frc.robot.subsystems.shooterNeoVortex;
 import frc.robot.subsystems.LimelightClimber;
-// import frc.robot.subsystems.Shooter;
 // import frc.robot.subsystems.CandleLED;
 // import frc.robot.commands.LimelightCandleIndicator;
 
@@ -97,7 +95,13 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StringPublisher;
 import static edu.wpi.first.units.Units.*;
+import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.BooleanPublisher;
 public class RobotContainer {
  private final double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
 
@@ -107,18 +111,36 @@ public class RobotContainer {
   // private final IntakeArm intakeArm = new IntakeArm();
   private final intakeForNow intakeArm = new intakeForNow();
 
-  //  private final SwerveRequest.FieldCentric drive =
-  //       new SwerveRequest.FieldCentric()
-  //           .withDeadband(0)
-  //           .withRotationalDeadband(0)
-  //           .withDriveRequestType(DriveRequestType.Velocity);
             private final SwerveRequest.FieldCentric drive =
     new SwerveRequest.FieldCentric()
         .withDeadband(0.05)
         .withRotationalDeadband(0.05)
         .withDriveRequestType(DriveRequestType.Velocity);
 
-    
+    private final NetworkTable elasticTable =
+    NetworkTableInstance.getDefault().getTable("Elastic");
+
+private final StringPublisher autoPublisher =
+    elasticTable.getStringTopic("SelectedAuto").publish();
+
+private final DoublePublisher txPub =
+    elasticTable.getDoubleTopic("limelight_tx").publish();
+
+// private final DoublePublisher tyPub =
+//     elasticTable.getDoubleTopic("limelight_ty").publish();
+
+// private final BooleanPublisher tvPub =
+//     elasticTable.getBooleanTopic("limelight_hasTarget").publish();
+DoublePublisher distancePub =
+    NetworkTableInstance.getDefault()
+        .getTable("Elastic")
+        .getDoubleTopic("tag_distance_meters")
+        .publish();
+        private final DoublePublisher shooterRPMPub =
+    NetworkTableInstance.getDefault()
+        .getTable("Elastic")
+        .getDoubleTopic("shooter_rpm")
+        .publish();
     // private final SwerveRequest.RobotCentric robotCentric = new SwerveRequest.RobotCentric()
     //         .withDeadband(0)
     //         .withRotationalDeadband(0)
@@ -160,8 +182,6 @@ public class RobotContainer {
   private final SlewRateLimiter slewLimX = new SlewRateLimiter(2.0);
   private final SlewRateLimiter slewLimRote = new SlewRateLimiter(1.0);
 
-  // private final shooterKraken shooterK = new shooterKraken();
-  // private final krakenShooter shooterK = new krakenShooter();
   private final Shooter shooter = new Shooter();
   private final shooterNeoVortex shooterN = new shooterNeoVortex();
   // private final neoShooterWithLime shooterN = new neoShooterWithLime();
@@ -190,7 +210,7 @@ public class RobotContainer {
       new CommandXboxController(OperatorConstants.kDriverControllerPort);
       private final CommandXboxController c = new CommandXboxController(OperatorConstants.kOpControllerPort);
 
-  private final SendableChooser<Command> autoChooser;
+  private final SendableChooser<String> autoChooser;
   private boolean sysIdActive = false;
 
   /**
@@ -204,72 +224,35 @@ public class RobotContainer {
     publishStaticTelemetry();
 
     // Build a PathPlanner-backed autonomous chooser and expose it to SmartDashboard.
-    SendableChooser<Command> chooser;
-    try {
-      chooser = AutoBuilder.buildAutoChooser();
-      // Register available autos; "midL4x1" is treated as optional.
-      // chooser.setDefaultOption("leftAuto", new leftAuto(drivetrain, shooterN, shooter, intakeArm, indexer, intake, limeShooter));
-      // chooser.addOption("leftDrive", new leftDriveAuto(drivetrain, shooterN, shooter, limeShooter));
-      chooser.addOption("midL4x1 (if present)", new PathPlannerAuto("midL4x1"));
-    } catch (Exception ex) {
-      // Fall back to a safe chooser if PathPlanner assets are missing.
-      chooser = new SendableChooser<>();
-     //chooser.setDefaultOption("leftAuto", new leftAuto(drivetrain, shooterN, shooter, intakeArm, indexer, intake, limeShooter));
-      SmartDashboard.putString("Mode/autoChooser/Error", "PathPlanner chooser failed: " + ex.getMessage());
-    }
-    autoChooser = chooser;
-    // Expose chooser so drivers can pick autonomous in the dashboard.
-    SmartDashboard.putData("Mode/autoChooser", autoChooser);
-  }
+    // SendableChooser<Command> chooser;
+    // try {
+    //   chooser = AutoBuilder.buildAutoChooser();
+    //   // Register available autos; "midL4x1" is treated as optional.
+    //   // chooser.setDefaultOption("leftAuto", new leftAuto(drivetrain, shooterN, shooter, intakeArm, indexer, intake, limeShooter));
+    //   // chooser.addOption("leftDrive", new leftDriveAuto(drivetrain, shooterN, shooter, limeShooter));
+    //   chooser.addOption("midL4x1 (if present)", new PathPlannerAuto("midL4x1"));
+    // } catch (Exception ex) {
+    //   // Fall back to a safe chooser if PathPlanner assets are missing.
+    //   chooser = new SendableChooser<>();
+    //  //chooser.setDefaultOption("leftAuto", new leftAuto(drivetrain, shooterN, shooter, intakeArm, indexer, intake, limeShooter));
+    //   SmartDashboard.putString("Mode/autoChooser/Error", "PathPlanner chooser failed: " + ex.getMessage());
+    // }
+    // autoChooser = chooser;
+    // // Expose chooser so drivers can pick autonomous in the dashboard.
+    // SmartDashboard.putData("Mode/autoChooser", autoChooser);
+    autoChooser = new SendableChooser<String>();
+    autoChooser.addOption("leftAuto", "leftAuto");
+    autoChooser.addOption("leftDriveAuto", "leftDriveAuto");
+    SmartDashboard.putData("autoChooser",autoChooser);
 
-// public void periodic() {
-//    // Note that X is defined as forward according to WPILib convention,
-//    // and Y is defined as to the left according to WPILib convention.
-//    System.out.println(-m_driverController.getLeftY());
-//    System.out.println(-m_driverController.getLeftX());
-//    System.out.println(-m_driverController.getRightX());
-//    drivetrain.setControl(
-//       m_driveRequest.withVelocityX(-m_driverController.getLeftY() * MaxSpeed)
-//          .withVelocityY(-m_driverController.getLeftX() * MaxSpeed)
-//          .withRotationalRate((-m_driverController.getRightX() * MaxAngularRate)*0.1)
-//    );
-// }
+  }
   /**
    * Wire driver controls to commands. Sets the default drive command and bindings for vision and SysId.
    */
   private void configureBindings() {
     
-    // Default command: field-centric drive with slew-limited joystick input.
-    // drivetrain.setDefaultCommand(
-    //     drivetrain.applyRequest(
-    //         () ->
-    //             {
-    //               double scale = speedScale(); // cache per loop to avoid inconsistent scaling and extra NT writes
-    //               return drive.withVelocityX(slewLimY.calculate(-joyLeftY()) * MaxSpeed * scale)
-    //                   // Field-centric: +Y is left. Negate stick X so pushing right moves right.
-    //                   .withVelocityY(slewLimX.calculate(-joyLeftX()) * MaxSpeed * scale)
-    //                   .withRotationalRate(slewLimRote.calculate(-joyRightX()) * MaxAngularRate * scale);
-    //             }));
     // driveFacing.HeadingController = steerController;
-// drivetrain.setDefaultCommand(
-//     drivetrain.applyRequest(() -> {
 
-//         double x = -MathUtil.applyDeadband(
-//             m_driverController.getLeftY(), DEADBAND);
-//         double y = -MathUtil.applyDeadband(
-//             m_driverController.getLeftX(), DEADBAND);
-//         double rot = -MathUtil.applyDeadband(
-//             m_driverController.getRightX(), DEADBAND);
-
-//         return new SwerveRequest.RobotCentric()
-//             .withDeadband(0)
-//             .withRotationalDeadband(0)
-//             .withDriveRequestType(DriveRequestType.Velocity)
-//             .withVelocityX(x * MaxSpeed*0.1)
-//             .withVelocityY(y * MaxSpeed*0.1)
-//             .withRotationalRate(rot * MaxAngularRate*0.1);
-//     })
-// );
   // drivetrain.setDefaultCommand(
   //   drivetrain.applyRequest(()-> {
 
@@ -294,39 +277,6 @@ public class RobotContainer {
   //           .withRotationalRate(rot * MaxAngularRate*0.1);
   //   })
   // );
-  // System.out.print(MaxSpeed); 
-//   drivetrain.setDefaultCommand(
-//     drivetrain.applyRequest(() -> {
-
-//         double x = -MathUtil.applyDeadband(m_driverController.getLeftY(), DEADBAND);
-//         double y = -MathUtil.applyDeadband(m_driverController.getLeftX(), DEADBAND);
-//         double rot = -MathUtil.applyDeadband(m_driverController.getRightX(), DEADBAND);
-
-//         double scale = speedScale();
-
-//         return new SwerveRequest.FieldCentric()
-//             .withDeadband(0.05)
-//             .withRotationalDeadband(0.05)
-//             .withDriveRequestType(DriveRequestType.Velocity)
-//             .withVelocityX(x * MaxSpeed * scale)
-//             .withVelocityY(y * MaxSpeed * scale)
-//             .withRotationalRate(rot * MaxAngularRate * scale);
-//     })
-// );
-// drivetrain.setDefaultCommand(
-//     drivetrain.applyRequest(() -> {
-
-//         double x = -MathUtil.applyDeadband(m_driverController.getLeftY(), 0.08);
-//         double y = -MathUtil.applyDeadband(m_driverController.getLeftX(), 0.08);
-//         double rot = -MathUtil.applyDeadband(m_driverController.getRightX(), 0.08);
-
-//         return new SwerveRequest.RobotCentric()
-//             .withDriveRequestType(DriveRequestType.Velocity)
-//             .withVelocityX(x * MaxSpeed * 0.3)
-//             .withVelocityY(y * MaxSpeed * 0.3)
-//             .withRotationalRate(rot * MaxAngularRate * 0.3);
-//     })
-// );
 
 drivetrain.setDefaultCommand(
     drivetrain.applyRequest(() -> {
@@ -402,13 +352,12 @@ drivetrain.setDefaultCommand(
 
     
     c.leftTrigger().whileTrue(new shooterCommand(shooterN));
-    //  c.rightTrigger().whileTrue(new kShooter(shooterK)); 
     c.x().whileTrue(new closeShooter(shooterN));
     // c.y().whileTrue(new closeKranken(shooterK));
     c.rightTrigger().whileTrue(new shooterLime(shooter));
     c.start().whileTrue(new reverseShooter(shooterN));
-    c.povUp().whileTrue(new raiseNeoVortexSpeed());
-    c.povDown().whileTrue(new lowerNeoVortexSpeed());
+    // c.povUp().whileTrue(new raiseNeoVortexSpeed());
+    // c.povDown().whileTrue(new lowerNeoVortexSpeed());
     //  c.b().whileTrue(new LimelightCandleIndicator(limeShooter, candle, 0));
     // Push live drivetrain telemetry to the log so you can monitor speeds, states, and odometry.
     drivetrain.registerTelemetry(logger::telemeterize);
@@ -418,14 +367,6 @@ drivetrain.setDefaultCommand(
    * Driver right stick X with deadband applied.
    * @return rotation input in -1..1, zeroed inside deadband
    */
-  // public double joyRightX() {
-  //   double rightX = m_driverController.getRightX();
-  //   if (Math.abs(rightX) > OperatorConstants.kJoyRightXDeadzone) {
-  //     return rightX;
-  //   }
-  //   return 0;
-  // }
-
   // Toggle helpers to latch speed mode on bumper presses.
   private void toggleSlow() {
     // If already slow, go back to normal; otherwise enter slow.
@@ -437,30 +378,24 @@ drivetrain.setDefaultCommand(
     speedMode = (speedMode == SpeedMode.FAST) ? SpeedMode.NORMAL : SpeedMode.FAST;
   }
 
-  /**
-   * Driver left stick X with deadband applied.
-   * @return strafe input in -1..1, zeroed inside deadband
-   */
-  // public double joyLeftX() {
-  //   double leftX = m_driverController.getLeftX();
-  //   if (Math.abs(leftX) > OperatorConstants.kJoyLeftXDeadzone) {
-  //     return leftX;
-  //   }
-  //   return 0;
-  // }
 
-  /**
-   * Driver left stick Y with deadband applied.
-   * @return forward/back input in -1..1, zeroed inside deadband
-   */
-  // public double joyLeftY() {
-  //   double leftY = m_driverController.getLeftY();
-  //   if (Math.abs(leftY) > OperatorConstants.kJoyLeftYDeadzone) {
-  //     return leftY;
-  //   }
-  //   return 0;
-  // }
+public double getDistanceToTag() {
 
+    double cameraHeight = 0.6; // meters
+    double tagHeight = 1.3;    // meters
+    double cameraAngle = Math.toRadians(25);
+      var state = drivetrain.getState();
+    double ty = state.Pose.getX(); // limelight vertical offset
+
+    double angleToTarget = cameraAngle + Math.toRadians(ty);
+
+    return (tagHeight - cameraHeight) / Math.tan(angleToTarget);
+}
+// public double getRPM() {
+//        double rotationsPerSecond = shooter.getRotorVelocity().getValueAsDouble();
+//     return rotationsPerSecond * 60.0;
+
+// }
 
   // Variable speed scaling based on bumper state (fast/slow/normal) to tame driver inputs.
   /**
@@ -534,6 +469,22 @@ drivetrain.setDefaultCommand(
       return Constants.OperatorConstants.normalSpeed;
      }
 
+public void periodic() {
+  var state = drivetrain.getState();
+    double tx = state.Pose.getX();
+    // double ty = getTy();
+    // boolean hasTarget = hasTarget();
+
+    txPub.set(tx);
+    // tyPub.set(ty);
+    // tvPub.set(hasTarget);
+
+     double distance = getDistanceToTag();
+
+    distancePub.set(distance);
+    //  shooterRPMPub.set(getRPM());
+}
+
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
    *
@@ -557,7 +508,21 @@ drivetrain.setDefaultCommand(
     //     );
     // // return null;
 
-    return autoChooser.getSelected();
+        String Choice = autoChooser.getSelected();
+    Command auto;
+    switch (Choice) {
+      case "leftAuto":
+        auto= new leftAuto(drivetrain, shooterN, shooter, intakeArm, indexer, intake, limeShooter);
+        break;
+      case "leftDriveAuto":
+        auto = new leftDriveAuto(drivetrain, shooterN, shooter, limeShooter, indexer);
+        break;
+    case "justMove":
+      default: 
+      auto= new PathPlannerAuto("leftAuto");
+        break;
+    }
+    return auto;
 
   }
 }

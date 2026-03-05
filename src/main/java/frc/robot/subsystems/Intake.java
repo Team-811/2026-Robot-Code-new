@@ -11,7 +11,7 @@ public class Intake extends SubsystemBase {
         IntakeMotor = new SparkMax(16, MotorType.kBrushless);
     }
     public void spin(){
-        IntakeMotor.set(1);
+        IntakeMotor.set(0.7);
     }
     public void dontspin(){
         IntakeMotor.set(0);

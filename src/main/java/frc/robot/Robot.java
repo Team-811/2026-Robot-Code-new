@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.DriverStation;
 /*
  * File Overview: Implements the WPILib TimedRobot lifecycle and hands control to RobotContainer.
  * Features/Details:
@@ -41,6 +43,12 @@ public class Robot extends TimedRobot {
   public void robotPeriodic() {
     // Keep the command scheduler alive each loop so bindings and subsystems stay updated.
     CommandScheduler.getInstance().run();
+            double time = DriverStation.getMatchTime();
+        NetworkTableInstance.getDefault()
+            .getTable("FMSInfo")
+            .getEntry("MatchTime")
+            .setDouble(time);
+
   }
 
   /** Invoked once when the robot transitions into Disabled mode. */
