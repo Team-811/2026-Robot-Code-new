@@ -20,30 +20,36 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 /**
  * Falcon-based shooter that maps Limelight distance estimates to RPM setpoints.
- * The lookup table is intentionally sparse; CTRE velocity closed-looping (with kV feedforward)
- * smooths the command so wheels hit the target speed instead of relying on open-loop percent outputs.
- * If distance lookup fails, the subsystem bails out by stopping so we do not fire at unknown speeds.
+ * Designed for novice readability: every config is explicit so behavior is stable across reboots.
+ * - Uses CTRE velocity closed-loop (with feedforward) instead of percent output so ball speed holds as battery sags.
+ * - Distance->RPM map is clamped and stops the motor if no valid lookup exists to avoid mystery shots.
+ * - Telemetry publishes target/actual RPM and ready flag to SmartDashboard so drivers know when to feed.
  */
 public class Shooter extends SubsystemBase {
 
-    private static final String CAN_BUS = "CANivore";
-    private static final int SHOOTER_ID = 55;
-    private static final double SUPPLY_LIMIT_AMPS = 50.0;
-    private static final double STATOR_LIMIT_AMPS = 80.0;
-    private static final double CLOSED_LOOP_RAMP_S = 0.1;
-    private static final double VOLTAGE_COMP_SAT = 12.0;
+    // Hardware wiring/config (change here if IDs/bus change)
+    private static final String CAN_BUS = "CANivore"; // Bus name: "CANivore" if plugged into CANivore, "rio" if on roboRIO CAN
+    private static final int SHOOTER_ID = 55;         // TalonFX CAN ID for the shooter motor
+
+    // Motor protection/consistency (tune as needed)
+    private static final double SUPPLY_LIMIT_AMPS = 50.0; // Typical 40-60A to prevent brownouts; raise if shots lag, lower if browning out
+    private static final double STATOR_LIMIT_AMPS = 80.0; // Torque limit; 60-100A is common for shooters
+    private static final double CLOSED_LOOP_RAMP_S = 0.1; // Seconds to ramp velocity setpoint; increase for smoother spin-up
+    private static final double VOLTAGE_COMP_SAT = 12.0;  // Voltage compensation target; keep at battery nominal (10-12V)
 
     private final TalonFX shooterMotor = new TalonFX(SHOOTER_ID, CAN_BUS);
     private final VelocityVoltage velocityRequest = new VelocityVoltage(0);
 
-    private static final String LIMELIGHT_NAME = "limelight-shooter";
+    private static final String LIMELIGHT_NAME = "limelight-shooter"; // NetworkTables name for the aiming camera
 
-    private static final double LIMELIGHT_HEIGHT = 0.80;
-    private static final double TARGET_HEIGHT = 2.10;
-    private static final double LIMELIGHT_ANGLE = Units.degreesToRadians(25);
+    // Camera/goal geometry (meters / radians). Adjust to your robot: measure the LL mounting height and pitch, and target height.
+    private static final double LIMELIGHT_HEIGHT = 0.80;                 // meters from carpet to Limelight lens
+    private static final double TARGET_HEIGHT = 2.10;                    // meters from carpet to target center
+    private static final double LIMELIGHT_ANGLE = Units.degreesToRadians(25); // LL pitch upward from horizontal
 
-    private static final double defaultSpeed = 1800;
+    private static final double defaultSpeed = 1800; // RPM to use if you want a safe fallback when no distance is available
 
+    // How close the motor velocity must be to the target to consider "ready" (rad/s). Lower = stricter, higher = more forgiving.
     private static final double VELOCITY_TOLERANCE_RPS = 1.5;
 
     private final NetworkTable limelightTable =
@@ -56,6 +62,7 @@ public class Shooter extends SubsystemBase {
 
     public Shooter() {
 
+        // Velocity closed-loop gains. Run SysId to replace these with measured kS/kV/kA and tuned kP.
         Slot0Configs slot0 = new Slot0Configs();
         slot0.kP = 0.12;
         slot0.kI = 0;
@@ -76,6 +83,7 @@ public class Shooter extends SubsystemBase {
         shooterMotor.getConfigurator().apply(cfg);
         shooterMotor.setInverted(false); // keep RPM table positive
 
+        // Distance (m) -> shooter RPM. Add more points as you calibrate; values should be positive (inversion set above).
         distanceToRPM.put(1.0, 750.0);
         distanceToRPM.put(2.0, 1800.0);
         distanceToRPM.put(3.0, 2500.0);
@@ -84,6 +92,7 @@ public class Shooter extends SubsystemBase {
     public void runShooterWithLimelight() {
         boolean hasTarget = limelightTable.getEntry("tv").getDouble(0) == 1;
         if (!hasTarget) {
+            // No valid target: stop to avoid firing at unknown speed
             targetRPM = 0;
             stopShooter();
             return;
@@ -135,9 +144,9 @@ public class Shooter extends SubsystemBase {
     }
     @Override
 public void periodic() {
-    double currentRPS = shooterMotor.getVelocity().getValueAsDouble();
-    SmartDashboard.putNumber("Shooter/TargetRPM", targetRPM);
-    SmartDashboard.putNumber("Shooter/VelocityRPM", currentRPS * 60.0);
-    SmartDashboard.putBoolean("Shooter/AtSpeed", isAtSpeed());
-}
+        double currentRPS = shooterMotor.getVelocity().getValueAsDouble();
+        SmartDashboard.putNumber("Shooter/TargetRPM", targetRPM);
+        SmartDashboard.putNumber("Shooter/VelocityRPM", currentRPS * 60.0);
+        SmartDashboard.putBoolean("Shooter/AtSpeed", isAtSpeed());
+    }
 }
