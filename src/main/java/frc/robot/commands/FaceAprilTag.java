@@ -30,8 +30,7 @@ public class FaceAprilTag extends Command {
   private static final int[] TARGET_TAG_IDS          = {9, 11}; // Dedicated tag filter for this command: only consider these IDs when aiming.
   private static final int TAG_PIPELINE_INDEX        = 0;       // Pipeline index that runs AprilTag detection on the Limelight; adjust to your config.
   private static final double MAX_ROTATE_DEG_PER_SEC = 90.0;    // Faster max rate but with stronger damping and tighter tolerance to reduce overshoot.
-  private static final int ON_TARGET_CYCLES_REQUIRED = 4;       // slight reduction for snappier finish
-
+ 
   
   private int onTargetCycles = 0;
   // Slew limiter to smooth rotational rate commands near the target.
