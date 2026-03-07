@@ -22,11 +22,8 @@ public class Elevator extends SubsystemBase {
     private final SparkMax hookMotor = new SparkMax(ClimberConstants.hookMotorId, MotorType.kBrushed);
 
     public Elevator() {
-        // Basic initialization only: set known inversion so positive is "lift up" / "close hook".
-        // If your wiring makes them spin the wrong way, flip these booleans.
-        liftLeft.setInverted(false);
-        liftRight.setInverted(false);
-        hookMotor.setInverted(false);
+        // Basic initialization only. Default inversion is non-inverted; if a motor spins the wrong way,
+        // flip the sign of the speed in ClimberConstants rather than using deprecated setInverted().
     }
 
     /** Raise the robot. Open-loop by design; keep speeds conservative to avoid brownouts/shock. */
