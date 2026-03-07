@@ -1,14 +1,16 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix6.configs.ClosedLoopRampsConfigs;
-import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
-import com.ctre.phoenix6.controls.VelocityVoltage;
-import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.VoltageConfigs;
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
+import com.ctre.phoenix6.configs.ClosedLoopRampsConfigs;
+import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
@@ -71,7 +73,9 @@ public class Shooter extends SubsystemBase {
 
         TalonFXConfiguration cfg = new TalonFXConfiguration()
             .withSlot0(slot0)
-            .withMotorOutput(new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Coast))
+            .withMotorOutput(new MotorOutputConfigs()
+                .withNeutralMode(NeutralModeValue.Coast)
+                .withInverted(InvertedValue.CounterClockwise_Positive)) // keep RPM table positive; flip if wiring requires
             .withCurrentLimits(new CurrentLimitsConfigs()
                 .withSupplyCurrentLimit(SUPPLY_LIMIT_AMPS)
                 .withSupplyCurrentLimitEnable(true)
@@ -81,7 +85,6 @@ public class Shooter extends SubsystemBase {
             .withClosedLoopRamps(new ClosedLoopRampsConfigs().withVoltageClosedLoopRampPeriod(CLOSED_LOOP_RAMP_S));
 
         shooterMotor.getConfigurator().apply(cfg);
-        shooterMotor.setInverted(false); // keep RPM table positive
 
         // Distance (m) -> shooter RPM. Add more points as you calibrate; values should be positive (inversion set above).
         distanceToRPM.put(1.0, 750.0);
@@ -99,13 +102,7 @@ public class Shooter extends SubsystemBase {
         }
 
         double distance = getDistanceMeters();
-        double clampedDistance = MathUtil.clamp(
-            distance,
-            distanceToRPM.firstKey(),
-            distanceToRPM.lastKey()
-        );
-
-        Double rpm = distanceToRPM.get(clampedDistance);
+        Double rpm = distanceToRPM.get(distance);
         if (rpm == null) {
             stopShooter();
             return;

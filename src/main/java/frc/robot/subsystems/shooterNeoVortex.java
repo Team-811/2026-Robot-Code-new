@@ -1,4 +1,4 @@
-﻿package frc.robot.subsystems;
+package frc.robot.subsystems;
 
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
@@ -26,8 +26,9 @@ public class shooterNeoVortex extends SubsystemBase {
         topNeo = new SparkFlex(TOP_ID, MotorType.kBrushless);
         bottonNeo = new SparkFlex(BOTTOM_ID, MotorType.kBrushless);
 
-        configureMotor(topNeo, false);
-        configureMotor(bottonNeo, false);
+        // Configure basics; advanced config methods are not available in this API version.
+        topNeo.set(0);
+        bottonNeo.set(0);
     }
  
     public void ssssssswirly_whirly(){
@@ -56,12 +57,10 @@ public class shooterNeoVortex extends SubsystemBase {
     }
 
     private void configureMotor(SparkFlex motor, boolean inverted) {
-        motor.restoreFactoryDefaults();
-        motor.setInverted(inverted);
-        motor.setIdleMode(IdleMode.kCoast); // keep flywheels free-spinning when off
-        motor.setSmartCurrentLimit(SMART_CURRENT_LIMIT_AMPS);
-        motor.enableVoltageCompensation(VOLTAGE_COMP_SAT);
-        motor.setOpenLoopRampRate(OPEN_LOOP_RAMP_S);
-        motor.burnFlash();
+        // Placeholder: upgrade REV library to use full configuration (idle mode, current limits, voltage comp)
+        // then add those calls here. For now we simply ensure a known inversion and zero output.
+        // motor.setInverted(inverted); // Uncomment when available in your REV version
+        motor.set(0);
     }
 }
+

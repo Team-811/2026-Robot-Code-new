@@ -65,7 +65,7 @@ public class Robot extends TimedRobot {
 
     // schedule the autonomous command (example)
     if (m_autonomousCommand != null) {
-      m_autonomousCommand.schedule();
+      CommandScheduler.getInstance().schedule(m_autonomousCommand);
     }
   }
 
@@ -77,7 +77,7 @@ public class Robot extends TimedRobot {
   public void teleopInit() {
     // Cancel autonomous before driver control so commands do not fight each other.
     if (m_autonomousCommand != null) {
-      m_autonomousCommand.cancel();
+      CommandScheduler.getInstance().cancel(m_autonomousCommand);
     }
   }
 
