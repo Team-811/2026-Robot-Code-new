@@ -87,10 +87,6 @@ public class Shooter extends SubsystemBase {
     public void stopShooter() {
         shooterMotor.stopMotor();
     }
-
-    public double getTargetRPM() {
-        return targetRPM;
-    }
     @Override
 public void periodic() {
     double tv = NetworkTableInstance.getDefault()

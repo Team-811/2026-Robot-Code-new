@@ -1,13 +1,11 @@
 package frc.robot.subsystems;
 
-import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class shooterNeoVortex extends SubsystemBase {
-    static double ssssssswirly_whirlyspeed = 0.45;
     SparkFlex topNeo;
     SparkFlex bottonNeo;
     public shooterNeoVortex(){
@@ -35,14 +33,6 @@ public class shooterNeoVortex extends SubsystemBase {
     }
     public void spinTheOtherWay(){
         bottonNeo.set(-0.2);
-    }
-    public static void raiseSpeed(){
-        ssssssswirly_whirlyspeed+=0.05;
-        System.out.println("The neo vortex speed has been raised to "+ssssssswirly_whirlyspeed);
-    }
-    public static void lowerSpeed(){
-        ssssssswirly_whirlyspeed-=0.05;
-        System.out.println("The neo vortex speed has been lowered to "+ssssssswirly_whirlyspeed);
     }
     @Override
    public void periodic() {

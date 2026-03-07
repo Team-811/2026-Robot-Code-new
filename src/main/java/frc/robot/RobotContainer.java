@@ -52,16 +52,12 @@ import frc.robot.commands.closeNeo2;
 import frc.robot.commands.closeShooter;
 import frc.robot.commands.leftAuto;
 import frc.robot.commands.leftDriveAuto;
-import frc.robot.commands.leftAuto;
-import frc.robot.commands.leftDriveAuto;
 // import frc.robot.commands.IntakeUp;
 // import frc.robot.commands.intakeArmCommand;
 // import frc.robot.commands.kShooter;
 import frc.robot.commands.lowerIntake;
-import frc.robot.commands.lowerNeoVortexSpeed;
 // import frc.robot.commands.neoShooterLime;
 import frc.robot.commands.raiseIntake;
-import frc.robot.commands.raiseNeoVortexSpeed;
 import frc.robot.commands.reverseShooter;
 // import frc.robot.commands.ShootToAprilTag;
 import frc.robot.generated.TunerConstants;
@@ -73,35 +69,22 @@ import frc.robot.subsystems.LimelightShooter;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.intakeForNow;       
 import frc.robot.subsystems.shooterNeoVortex;
-import frc.robot.subsystems.LimelightClimber;
 // import frc.robot.subsystems.CandleLED;
 // import frc.robot.commands.LimelightCandleIndicator;
 
 import com.ctre.phoenix6.swerve.SwerveRequest;
-import com.ctre.phoenix6.swerve.utility.PhoenixPIDController;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
-import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import com.pathplanner.lib.commands.PathPlannerAuto;
-import com.pathplanner.lib.auto.AutoBuilder;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StringPublisher;
 import static edu.wpi.first.units.Units.*;
-import edu.wpi.first.networktables.DoublePublisher;
-import edu.wpi.first.networktables.BooleanPublisher;
 public class RobotContainer {
  private final double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
 
@@ -111,36 +94,6 @@ public class RobotContainer {
   // private final IntakeArm intakeArm = new IntakeArm();
   private final intakeForNow intakeArm = new intakeForNow();
 
-            private final SwerveRequest.FieldCentric drive =
-    new SwerveRequest.FieldCentric()
-        .withDeadband(0.05)
-        .withRotationalDeadband(0.05)
-        .withDriveRequestType(DriveRequestType.Velocity);
-
-    private final NetworkTable elasticTable =
-    NetworkTableInstance.getDefault().getTable("Elastic");
-
-private final StringPublisher autoPublisher =
-    elasticTable.getStringTopic("SelectedAuto").publish();
-
-private final DoublePublisher txPub =
-    elasticTable.getDoubleTopic("limelight_tx").publish();
-
-// private final DoublePublisher tyPub =
-//     elasticTable.getDoubleTopic("limelight_ty").publish();
-
-// private final BooleanPublisher tvPub =
-//     elasticTable.getBooleanTopic("limelight_hasTarget").publish();
-DoublePublisher distancePub =
-    NetworkTableInstance.getDefault()
-        .getTable("Elastic")
-        .getDoubleTopic("tag_distance_meters")
-        .publish();
-        private final DoublePublisher shooterRPMPub =
-    NetworkTableInstance.getDefault()
-        .getTable("Elastic")
-        .getDoubleTopic("shooter_rpm")
-        .publish();
     // private final SwerveRequest.RobotCentric robotCentric = new SwerveRequest.RobotCentric()
     //         .withDeadband(0)
     //         .withRotationalDeadband(0)
@@ -192,12 +145,6 @@ DoublePublisher distancePub =
   // private final Shooter shooter = new Shooter();
   // private final CandleLED candle = new CandleLED(Constants.CANdleConstants.candleCanId, Constants.CANdleConstants.ledCount);
 
-  // Cache last-published driver telemetry to avoid NetworkTables spam.
-  private String lastMode;
-  private Double lastScale;
-  private enum SpeedMode { SLOW, NORMAL, FAST }
-  private SpeedMode speedMode = SpeedMode.NORMAL;
-
   // private final SwerveRequest.FieldCentric m_driveRequest = new SwerveRequest.FieldCentric()
   //  .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
   //  .withDriveRequestType(DriveRequestType.OpenLoopVoltage)
@@ -211,7 +158,6 @@ DoublePublisher distancePub =
       private final CommandXboxController c = new CommandXboxController(OperatorConstants.kOpControllerPort);
 
   private final SendableChooser<String> autoChooser;
-  private boolean sysIdActive = false;
 
   /**
    * ddddddddd
@@ -329,12 +275,8 @@ drivetrain.setDefaultCommand(
     // m_driverController.start().and(m_driverController.x())
     //     .whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse).finallyDo((interrupted) -> sysIdActive = false))
     //     .onTrue(new InstantCommand(() -> sysIdActive = true));
-    m_driverController.start()
-        .and(m_driverController.y().negate())
-        .and(m_driverController.x().negate())
-        .onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
-     m_driverController.start().onTrue(drivetrain.runOnce(()-> drivetrain.seedFieldCentric()));
-         m_driverController.back().onTrue(drivetrain.runOnce(()-> drivetrain.seedFieldCentric()));
+    m_driverController.start().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
+    m_driverController.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
         
      
 
@@ -367,123 +309,11 @@ drivetrain.setDefaultCommand(
    * Driver right stick X with deadband applied.
    * @return rotation input in -1..1, zeroed inside deadband
    */
-  // Toggle helpers to latch speed mode on bumper presses.
-  private void toggleSlow() {
-    // If already slow, go back to normal; otherwise enter slow.
-    speedMode = (speedMode == SpeedMode.SLOW) ? SpeedMode.NORMAL : SpeedMode.SLOW;
-  }
-
-  private void toggleFast() {
-    // If already fast, go back to normal; otherwise enter fast.
-    speedMode = (speedMode == SpeedMode.FAST) ? SpeedMode.NORMAL : SpeedMode.FAST;
-  }
-
-
-public double getDistanceToTag() {
-
-    double cameraHeight = 0.6; // meters
-    double tagHeight = 1.3;    // meters
-    double cameraAngle = Math.toRadians(25);
-      var state = drivetrain.getState();
-    double ty = state.Pose.getX(); // limelight vertical offset
-
-    double angleToTarget = cameraAngle + Math.toRadians(ty);
-
-    return (tagHeight - cameraHeight) / Math.tan(angleToTarget);
-}
-// public double getRPM() {
-//        double rotationsPerSecond = shooter.getRotorVelocity().getValueAsDouble();
-//     return rotationsPerSecond * 60.0;
-
-// }
-
-  // Variable speed scaling based on bumper state (fast/slow/normal) to tame driver inputs.
-  /**
-   * Computes current speed scale based on latched speedMode (toggled via bumpers).
-   * @return scalar multiplier applied to translational/rotational commands
-   */
-  // public double speedScale() {
-  //   String mode = switch (speedMode) {
-  //     case SLOW -> "Slow";
-  //     case FAST -> "Fast";
-  //     default -> "Normal";
-  //   };
-  //   double scale = switch (speedMode) {
-  //     case SLOW -> Constants.OperatorConstants.slowSpeed;
-  //     case FAST -> Constants.OperatorConstants.slowSpeed;
-  //     default -> Constants.OperatorConstants.slowSpeed;
-  //   };
-  //   boolean modeChanged = modeChanged(scale, mode);
-  //   // Debug telemetry: surface current speed mode/scale to the dashboard.
-  //   pushDriverTelemetry(mode, scale, modeChanged);
-  //   lastMode = mode;
-  //   lastScale = scale;
-  //   return scale;
-  // }
-
-  /**
-   * Detects if speed mode changed (used to gate telemetry updates).
-   * @return true if mode or scale differ from last check
-   */
-  private boolean modeChanged(double scale, String mode) {
-    if (lastMode == null || lastScale == null) {
-      return true;
-    }
-    return !mode.equals(lastMode) || scale != lastScale;
-  }
-
   /** One-time dashboard entries that do not change at runtime. */
   private void publishStaticTelemetry() {
     SmartDashboard.putNumber("Drive/MaxSpeedMps", MaxSpeed);
     SmartDashboard.putNumber("Drive/MaxAngularRateRadPerSec", MaxAngularRate);
   }
-
-  /** Live driver-focused telemetry for quick debugging and mode awareness. */
-   private void pushDriverTelemetry(String mode, double scale, boolean publishModeScale) {
-    if (publishModeScale) {
-      SmartDashboard.putString("Drive/SpeedMode", mode);
-      SmartDashboard.putNumber("Drive/SpeedScale", scale);
-    }
-    SmartDashboard.putNumber("Drive/RotationScale", scale);
-    SmartDashboard.putBoolean("SysId/Running", sysIdActive);
-    // SmartDashboard.putNumber("Joystick/LeftX", joyLeftX());
-    // SmartDashboard.putNumber("Joystick/LeftY", joyLeftY());
-    // SmartDashboard.putNumber("Joystick/RightX", joyRightX());
-
-    var state = drivetrain.getState();
-    if (state != null) {
-      SmartDashboard.putNumber("Drive/PoseX", state.Pose.getX());
-      SmartDashboard.putNumber("Drive/PoseY", state.Pose.getY());
-      SmartDashboard.putNumber("Drive/HeadingDeg", state.Pose.getRotation().getDegrees());
-      SmartDashboard.putNumber("Drive/MeasuredVx", state.Speeds.vxMetersPerSecond);
-      SmartDashboard.putNumber("Drive/MeasuredVy", state.Speeds.vyMetersPerSecond);
-      SmartDashboard.putNumber("Drive/MeasuredOmega", state.Speeds.omegaRadiansPerSecond);
-    }
-  }
-       public double speedScale(){
-      if(m_driverController.leftBumper().getAsBoolean())
-      return Constants.OperatorConstants.fastSpeed;
-        if(m_driverController.leftTrigger().getAsBoolean())
-      return Constants.OperatorConstants.slowSpeed;
-
-      return Constants.OperatorConstants.normalSpeed;
-     }
-
-public void periodic() {
-  var state = drivetrain.getState();
-    double tx = state.Pose.getX();
-    // double ty = getTy();
-    // boolean hasTarget = hasTarget();
-
-    txPub.set(tx);
-    // tyPub.set(ty);
-    // tvPub.set(hasTarget);
-
-     double distance = getDistanceToTag();
-
-    distancePub.set(distance);
-    //  shooterRPMPub.set(getRPM());
-}
 
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
