@@ -71,4 +71,31 @@ public final class Constants {
     // Limelight pipeline index this indicator should watch (0 = AprilTag pipeline in this project).
     public static final int pipelineIndex = 0;
   }
+
+  /**
+   * Hardware IDs and speeds for the climber (dual NEO lift + hook motor).
+   * Rationale:
+   * - IDs are split so left/right lifts can be wired independently; keep them unique on the CAN bus.
+   * - Speeds are open-loop percents to keep sequencing simple; tune cautiously on a practice rig.
+   * - Timings are coarse delays to coordinate hook/lift without sensors; expect to tune these on a real robot.
+   */
+  public static final class ClimberConstants {
+    private ClimberConstants() {}
+
+    // CAN IDs (set to your wiring; ensure they are unique to avoid CAN conflicts)
+    public static final int liftLeftNeoId  = 31;
+    public static final int liftRightNeoId = 32;
+    public static final int hookMotorId    = 33; // Johnson gearmotor controller
+
+    // Speeds (percent output 0-1). Keep conservative to avoid shock loads; increase only after testing.
+    public static final double liftUpSpeed     = 0.7;
+    public static final double liftDownSpeed   = -0.4;
+    public static final double hookCloseSpeed  = 0.5;
+    public static final double hookOpenSpeed   = -0.5;
+
+    // Timed sequence durations (seconds). These are dead-reckoned delays; tune on a practice rig for your geometry.
+    public static final double hookTimeSeconds     = 0.6;
+    public static final double liftStepSeconds     = 2.0;
+    public static final double settleTimeSeconds   = 0.2;
+  }
 }

@@ -49,6 +49,9 @@ import frc.robot.subsystems.LimelightShooter;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.intakeForNow;       
 import frc.robot.subsystems.shooterNeoVortex;
+import frc.robot.subsystems.Elevator;
+import frc.robot.commands.ClimbCommand;
+import frc.robot.commands.DescendCommand;
 
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -93,6 +96,7 @@ public class RobotContainer {
 
   private final Shooter shooter = new Shooter();
   private final shooterNeoVortex shooterN = new shooterNeoVortex();
+  private final Elevator elevator = new Elevator();
 
 
   private final LimelightShooter limeShooter = new LimelightShooter(); // primary LL4 (scoring/AprilTag aim)
@@ -182,6 +186,10 @@ public class RobotContainer {
     c.x().whileTrue(new closeShooter(shooterN));
     c.rightTrigger().whileTrue(new shooterLime(shooter));
     c.start().whileTrue(new reverseShooter(shooterN));
+
+    // Climber: POV up to run climb sequence, POV down to descend. Toggle cancels/restarts.
+    c.povUp().toggleOnTrue(new ClimbCommand(elevator));
+    c.povDown().toggleOnTrue(new DescendCommand(elevator));
     drivetrain.registerTelemetry(logger::telemeterize);
   }
 
