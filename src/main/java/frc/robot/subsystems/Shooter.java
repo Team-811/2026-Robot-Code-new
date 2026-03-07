@@ -1,6 +1,5 @@
 package frc.robot.subsystems;
 
-import com.ctre.phoenix6.configs.ClosedLoopRampsConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -12,13 +11,12 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.LimelightHelpers;
 
 /**
  * Falcon-based shooter that maps Limelight distance estimates to RPM setpoints.
@@ -43,11 +41,6 @@ public class Shooter extends SubsystemBase {
     private final VelocityVoltage velocityRequest = new VelocityVoltage(0);
 
     private static final String LIMELIGHT_NAME = "limelight-shooter"; // NetworkTables name for the aiming camera
-
-    // Camera/goal geometry (meters / radians). Adjust to your robot: measure the LL mounting height and pitch, and target height.
-    private static final double LIMELIGHT_HEIGHT = 0.80;                 // meters from carpet to Limelight lens
-    private static final double TARGET_HEIGHT = 2.10;                    // meters from carpet to target center
-    private static final double LIMELIGHT_ANGLE = Units.degreesToRadians(25); // LL pitch upward from horizontal
 
     private static final double defaultSpeed = 1800; // RPM to use if you want a safe fallback when no distance is available
 
@@ -119,14 +112,16 @@ public class Shooter extends SubsystemBase {
     private double getDistanceMeters() {
         boolean hasTarget = limelightTable.getEntry("tv").getDouble(0) == 1;
         if (!hasTarget) {
-            // No tag seen: fall back to a conservative fixed RPM so the command can still spin up safely.
-            targetRPM = defaultSpeed;
+            return -1.0;
         }
-        
-        double ty = limelightTable.getEntry("ty").getDouble(0);
 
-        return (TARGET_HEIGHT - LIMELIGHT_HEIGHT) /
-            Math.tan(LIMELIGHT_ANGLE + Units.degreesToRadians(ty));
+        // Use camera-space pose for direct range to the observed AprilTag; this updates every frame.
+        var pose = LimelightHelpers.getTargetPose3d_CameraSpace(LIMELIGHT_NAME);
+        if (pose == null) {
+            return -1.0;
+        }
+        // Distance from camera to the observed AprilTag (meters, 3D norm).
+        return pose.getTranslation().getNorm();
     }
 
     public boolean isAtSpeed() {
@@ -145,5 +140,6 @@ public void periodic() {
         SmartDashboard.putNumber("Shooter/TargetRPM", targetRPM);
         SmartDashboard.putNumber("Shooter/VelocityRPM", currentRPS * 60.0);
         SmartDashboard.putBoolean("Shooter/AtSpeed", isAtSpeed());
+        SmartDashboard.putNumber("Shooter/DistanceMeters", getDistanceMeters());
     }
 }
