@@ -6,9 +6,9 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 /**
  * Dual NEO Vortex shooter (SparkFlex controllers).
- * Notes: Current REVLib version in this project exposes only basic set() control on SparkFlex,
- * so we run open-loop percent output. Speeds are centralized and clamped to improve consistency,
- * and both motors are always commanded together.
+ * Open-loop percent output with clamped outputs. SparkFlex config APIs are unavailable in this
+ * REVLib version, so advanced settings (idle mode, current limit, voltage comp) are omitted.
+ * Both motors are always commanded together.
  */
 public class shooterNeoVortex extends SubsystemBase {
     private static final int TOP_ID = 28;

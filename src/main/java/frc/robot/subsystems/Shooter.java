@@ -44,8 +44,6 @@ public class Shooter extends SubsystemBase {
 
     private static final String LIMELIGHT_NAME = "limelight-shooter"; // NetworkTables name for the aiming camera
 
- //   private static final double defaultSpeed = 1800; // RPM to use if you want a safe fallback when no distance is available
-
     // How close the motor velocity must be to the target to consider "ready" (rad/s). Lower = stricter, higher = more forgiving.
     private static final double VELOCITY_TOLERANCE_RPS = 1.5;
 
