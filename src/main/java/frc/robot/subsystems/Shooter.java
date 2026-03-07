@@ -80,9 +80,9 @@ public class Shooter extends SubsystemBase {
         shooterMotor.getConfigurator().apply(cfg);
 
         // Distance (m) -> shooter RPM. Add more points as you calibrate; values should be positive (inversion set above).
-        distanceToRPM.put(1.0, 750.0);
-        distanceToRPM.put(2.0, 1800.0);
-        distanceToRPM.put(3.0, 2500.0);
+        distanceToRPM.put(1.0, -750.0);
+        distanceToRPM.put(2.0, -1960.0);
+        distanceToRPM.put(3.0, -2650.0);
     }
 
     public void runShooterWithLimelight() {

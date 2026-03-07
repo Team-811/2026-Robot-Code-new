@@ -55,18 +55,7 @@ public class TunerConstants {
 
     // Initial configs for the drive and steer motors and the azimuth encoder; these cannot be null.
     // Some configs will be overwritten; check the `with*InitialConfigs()` API documentation.
-    private static final TalonFXConfiguration driveInitialConfigs = new TalonFXConfiguration()
-        .withCurrentLimits(
-            new CurrentLimitsConfigs()
-                .withStatorCurrentLimit(Amps.of(80))
-                .withStatorCurrentLimitEnable(true)
-                .withSupplyCurrentLimit(Amps.of(50))
-                .withSupplyCurrentLimitEnable(true)
-        )
-        .withMotorOutput(
-            new MotorOutputConfigs()
-                .withNeutralMode(NeutralModeValue.Brake)
-        );
+    private static final TalonFXConfiguration driveInitialConfigs = new TalonFXConfiguration();
     private static final TalonFXConfiguration steerInitialConfigs = new TalonFXConfiguration()
         .withCurrentLimits(
             new CurrentLimitsConfigs()
@@ -74,12 +63,6 @@ public class TunerConstants {
                 // stator current limit to help avoid brownouts without impacting performance.
                 .withStatorCurrentLimit(Amps.of(60))
                 .withStatorCurrentLimitEnable(true)
-                .withSupplyCurrentLimit(Amps.of(40))
-                .withSupplyCurrentLimitEnable(true)
-        )
-        .withMotorOutput(
-            new MotorOutputConfigs()
-                .withNeutralMode(NeutralModeValue.Brake)
         );
     private static final CANcoderConfiguration encoderInitialConfigs = new CANcoderConfiguration();
     // Configs for the Pigeon 2; leave this null to skip applying Pigeon 2 configs
@@ -146,7 +129,7 @@ public class TunerConstants {
     private static final int kFrontLeftDriveMotorId = 11;
     private static final int kFrontLeftSteerMotorId = 6;
     private static final int kFrontLeftEncoderId = 5;
-    private static final Angle kFrontLeftEncoderOffset = Rotations.of(0.327392578125);
+    private static final Angle kFrontLeftEncoderOffset = Rotations.of(0.2421875);
     private static final boolean kFrontLeftSteerMotorInverted = true;
     private static final boolean kFrontLeftEncoderInverted = false;
 
@@ -157,7 +140,7 @@ public class TunerConstants {
     private static final int kFrontRightDriveMotorId = 8;
     private static final int kFrontRightSteerMotorId = 25;
     private static final int kFrontRightEncoderId = 3;
-    private static final Angle kFrontRightEncoderOffset = Rotations.of(0.020263671875);
+    private static final Angle kFrontRightEncoderOffset = Rotations.of(-0.052001953125);
     private static final boolean kFrontRightSteerMotorInverted = true;
     private static final boolean kFrontRightEncoderInverted = false;
 
@@ -168,7 +151,7 @@ public class TunerConstants {
     private static final int kBackLeftDriveMotorId = 12;
     private static final int kBackLeftSteerMotorId = 4;
     private static final int kBackLeftEncoderId = 7;
-    private static final Angle kBackLeftEncoderOffset = Rotations.of(-0.299072265625);
+    private static final Angle kBackLeftEncoderOffset = Rotations.of(-0.32373046875);
     private static final boolean kBackLeftSteerMotorInverted = true;
     private static final boolean kBackLeftEncoderInverted = false;
 
@@ -179,7 +162,7 @@ public class TunerConstants {
     private static final int kBackRightDriveMotorId = 13;
     private static final int kBackRightSteerMotorId = 2;
     private static final int kBackRightEncoderId = 9;
-    private static final Angle kBackRightEncoderOffset = Rotations.of(-0.249267578125);
+    private static final Angle kBackRightEncoderOffset = Rotations.of(-0.389404296875);
     private static final boolean kBackRightSteerMotorInverted = true;
     private static final boolean kBackRightEncoderInverted = false;
 
