@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -37,7 +38,8 @@ public class Shooter extends SubsystemBase {
     private static final double CLOSED_LOOP_RAMP_S = 0.1; // Seconds to ramp velocity setpoint; increase for smoother spin-up
     private static final double VOLTAGE_COMP_SAT = 12.0;  // Voltage compensation target; keep at battery nominal (10-12V)
 
-    private final TalonFX shooterMotor = new TalonFX(SHOOTER_ID, CAN_BUS);
+    private static final CANBus SHOOTER_CANBUS = new CANBus(CAN_BUS);
+    private final TalonFX shooterMotor = new TalonFX(SHOOTER_ID, SHOOTER_CANBUS);
     private final VelocityVoltage velocityRequest = new VelocityVoltage(0);
 
     private static final String LIMELIGHT_NAME = "limelight-shooter"; // NetworkTables name for the aiming camera

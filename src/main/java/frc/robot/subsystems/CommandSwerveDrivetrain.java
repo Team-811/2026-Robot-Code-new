@@ -582,14 +582,14 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                         .withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons())
                 ),
                 new PPHolonomicDriveController(
-                    // PID constants for translation
-                    new PIDConstants(10, 0, 0),
-                    // PID constants for rotation
-                    new PIDConstants(10, 0.5, 0.5)
+                    // PID constants for translation (moderate start; tune on-field)
+                    new PIDConstants(3.0, 0.0, 0.3),
+                    // PID constants for rotation (moderate start; tune on-field)
+                    new PIDConstants(4.0, 0.0, 0.4)
                 ),
                 config,
-                // Assume the path needs to be flipped for Red vs Blue, this is normally the case
-                () -> DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Blue,
+                // Flip paths when on Red (paths authored in Blue coordinates)
+                () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
                 this // Subsystem for requirements
             );
         } catch (Exception ex) {
