@@ -28,6 +28,14 @@ import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathPlannerPath;
 
+/**
+ * CTRE Phoenix 6 swerve wrapper produced by Tuner X, augmented with PathPlanner AutoBuilder wiring.
+ * Responsibilities:
+ * - Handles alliance-relative perspective switching for field-centric drive.
+ * - Exposes SysId routines for translation/steer/rotation characterization (used when bound in RobotContainer).
+ * - Provides helper to follow PathPlanner paths with feedforward (ApplyRobotSpeeds).
+ * - Starts a faster simulation loop when running in sim so PID behaves realistically.
+ */
 public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Subsystem {
     private static final double kSimLoopPeriod = 0.005; // 5 ms
     private Notifier m_simNotifier = null;

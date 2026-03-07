@@ -10,6 +10,12 @@ import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+/**
+ * Falcon-based shooter that maps Limelight distance estimates to RPM setpoints.
+ * The lookup table is intentionally sparse; CTRE velocity closed-looping (with kV feedforward)
+ * smooths the command so wheels hit the target speed instead of relying on open-loop percent outputs.
+ * If distance lookup fails, the subsystem bails out by stopping so we do not fire at unknown speeds.
+ */
 public class Shooter extends SubsystemBase {
 
     private final TalonFX shooterMotor = new TalonFX(55, "*");
@@ -61,6 +67,7 @@ public class Shooter extends SubsystemBase {
 
         targetRPM = rpm;
 
+        // Command the TalonFX in velocity mode using RPM->RPS conversion; keeps closed-loop on the motor controller.
         shooterMotor.setControl(
             velocityRequest.withVelocity(targetRPM / 60.0)
         );
@@ -68,8 +75,10 @@ public class Shooter extends SubsystemBase {
 
     private double getDistanceMeters() {
         boolean hasTarget = limelightTable.getEntry("tv").getDouble(0) == 1;
-        if (!hasTarget) 
+        if (!hasTarget) {
+            // No tag seen: fall back to a conservative fixed RPM so the command can still spin up safely.
             targetRPM = defaultSpeed;
+        }
         
         double ty = limelightTable.getEntry("ty").getDouble(0);
 

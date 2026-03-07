@@ -1,44 +1,31 @@
 // Copyright (c) FIRST and other WPILib contributors.
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project
-// Controller Guide - Driver Xbox
-//   Left stick: strafe (field-centric X/Y)
-//   Right stick X: rotate; deadbands 0.1
+// Driver (controller 0):
+//   - Left stick field-centric translation, right stick X rotation. Inputs are slew-limited and capped at 50% translational / 30% rotational to keep the robot smooth.
+//   - B (hold): FaceAprilTag auto-aims to AprilTags 9/11 using Limelight.
+//   - Start or Back: reseed the field-centric heading to the current gyro angle.
 //
-// Speed modes (Drive/SpeedMode on dashboard) - TOGGLES (press once to latch):
-//   Right bumper press toggles Slow (0.3) <-> Normal (0.8)
-//   Left bumper  press toggles Fast (1.0) <-> Normal (0.8)
-//   Scale applies to translation and rotation; current mode/scale published to SmartDashboard.
+// Operator (controller 1):
+//   - B: spin intake; A: run indexer; Y: fast shooter spin (closeNeo2); LB/RB: raise/lower intake pivot motor.
+//   - LT: slow shooter spin; X: medium shooter spin; RT: Limelight-based Falcon shooter; Start: reverse shooter.
 //
-// LimelightShooter assists ('B' Button hold-to-run while button held):
-//   B button: FaceAprilTag (rotate in place to center LL tx on tags 9/11)
-//   Right trigger: ShootToAprilTag (shoot balls to targeted AprilTag based on distance)
-//   Left trigger:  ShootToAprilTag (shoot balls to targeted AprilTag based on distance)
-//   Note: FaceAprilTag forces TAG_PIPELINE_INDEX and filters to TARGET_TAG_IDS (9,11 by default).
-//
-// Start button: reseed field-centric heading when pressed alone.
-// Start + Y (held): SysId quasistatic forward on drivetrain (overrides drive while held).
-// Start + X (held): SysId quasistatic reverse on drivetrain (overrides drive while held).
-//
-// LEDs (CANdle):
-//   Default command lights green when LimelightShooter sees a target on the watched pipeline; off otherwise.
+// Autonomous chooser:
+//   - SmartDashboard key "autoChooser" exposes "leftAuto" and "leftDriveAuto" PathPlanner sequences.
 //
 // Notes:
-// Default command is field-centric drive; MaxSpeed is scaled by kSpeed=1.0 then by SpeedMode scale.
-// SysId bindings require robot in a safe state; they override normal driving while active.
-// LimelightShooter: Data is updated in its periodic; keep subsystem scheduled.
-//This file is loacted C:\Users\Team 811\FRC\2025-Robot-Code-new\2025-Robot-Code-new\src\main\java\frc\robot
-//            Ensure the tag pipeline is active and LEDs on when using triggers.
+//   - Default command is CTRE field-centric drive with slew rate limiting for smooth starts/stops.
+//   - Drivetrain telemetry is streamed via Telemetry; LimelightShooter pushes updates in its periodic.
 package frc.robot;
 
 /*
  * File Overview: Central wiring hub for subsystems, commands, and driver controls.
  * Features/Details:
- * - Creates drivetrain (CTRE swerve), Limelight, CANdle LEDs, telemetry logger, and autonomous chooser.
- * - Defines driver Xbox bindings: field-centric default drive, speed modes via bumpers, vision assists on triggers, SysId on start+X/Y.
- * - Applies joystick deadbands/slew rate limiting and speed scaling for smooth control.
- * - Publishes driver-facing telemetry (speed mode/scale, joystick values, pose, velocities) to SmartDashboard.
- * - Seeds field-centric heading at startup and registers drivetrain telemetry streaming.
+ * - Instantiates the CTRE swerve drivetrain, shooter/indexer/intake subsystems, Limelight, and telemetry logger.
+ * - Wires driver controls for smooth field-centric driving and quick AprilTag snap-to-heading while B is held.
+ * - Wires operator controls for intake/indexer/shooter motors with distinct speed presets per button.
+ * - Registers a PathPlanner-backed autonomous chooser on the dashboard.
+ * - Seeds field-centric heading at startup and streams drivetrain telemetry continuously.
  */
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.FaceAprilTag;
@@ -186,6 +173,7 @@ public class RobotContainer {
     // autoChooser = chooser;
     // // Expose chooser so drivers can pick autonomous in the dashboard.
     // SmartDashboard.putData("Mode/autoChooser", autoChooser);
+    // Expose autos on SmartDashboard as simple string keys (mapped to commands later).
     autoChooser = new SendableChooser<String>();
     autoChooser.addOption("leftAuto", "leftAuto");
     autoChooser.addOption("leftDriveAuto", "leftDriveAuto");
@@ -224,6 +212,7 @@ public class RobotContainer {
   //   })
   // );
 
+    // Default: smooth field-centric drive with conservative caps so practice driving stays tame.
 drivetrain.setDefaultCommand(
     drivetrain.applyRequest(() -> {
 
@@ -233,9 +222,9 @@ drivetrain.setDefaultCommand(
 
         return new SwerveRequest.FieldCentric()
             .withDriveRequestType(DriveRequestType.Velocity)
-            .withVelocityX(x * MaxSpeed * 0.5)
+            .withVelocityX(x * MaxSpeed * 0.5)   // limit translation to 50% to reduce wheelspin and keep control simple
             .withVelocityY(y * MaxSpeed * 0.5)
-            .withRotationalRate(rot * MaxAngularRate * 0.3);
+            .withRotationalRate(rot * MaxAngularRate * 0.3); // rotation clamped harder to avoid tipping/snapping
     })
 );
 
@@ -248,8 +237,7 @@ drivetrain.setDefaultCommand(
         RobotModeTriggers.disabled().whileTrue(
             drivetrain.applyRequest(() -> idle).ignoringDisable(true)
         );
-    // Default LED indicator: turn CANdle green when shooter Limelight sees a target on the watched pipeline.
-    // candle.setDefaultCommand(new LimelightCandleIndicator(limeShooter, candle, Constants.CANdleConstants.pipelineIndex));
+    // Placeholder for LED status (CANdle code removed); re-enable here if a CANdle is added back.
 
     //-- SHOOTER VISION -- Vision-assisted align/target commands.
     // Run face-to-tag only while B is held so driver regains control on release.
@@ -268,13 +256,7 @@ drivetrain.setDefaultCommand(
     //-- CLIMBER VISION -- Vision-assisted align/target commands.
     //driverController.y().whileTrue(new FaceTowerClimber(drivetrain, limeClimber)); //TODO: Implement climber vision command.
 
-    // SysId bindings to characterize drivetrain when requested.
-    // m_driverController.start().and(m_driverController.y())
-    //     .whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward).finallyDo((interrupted) -> sysIdActive = false))
-    //     .onTrue(new InstantCommand(() -> sysIdActive = true));
-    // m_driverController.start().and(m_driverController.x())
-    //     .whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse).finallyDo((interrupted) -> sysIdActive = false))
-    //     .onTrue(new InstantCommand(() -> sysIdActive = true));
+    // Heading reseed helpers (both Start and Back give drivers a quick way to fix field-centric zero).
     m_driverController.start().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
     m_driverController.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
         
@@ -305,10 +287,6 @@ drivetrain.setDefaultCommand(
     drivetrain.registerTelemetry(logger::telemeterize);
   }
 
-  /**
-   * Driver right stick X with deadband applied.
-   * @return rotation input in -1..1, zeroed inside deadband
-   */
   /** One-time dashboard entries that do not change at runtime. */
   private void publishStaticTelemetry() {
     SmartDashboard.putNumber("Drive/MaxSpeedMps", MaxSpeed);
@@ -316,9 +294,9 @@ drivetrain.setDefaultCommand(
   }
 
   /**
-   * Use this to pass the autonomous command to the main {@link Robot} class.
-   *
-   * @return the command to run in autonomous
+   * Builds the autonomous command selected on the dashboard chooser.
+   * Chooser stores string keys; this maps them to concrete command objects.
+   * Falls back to PathPlanner "leftAuto" if nothing is selected.
    */
   public Command getAutonomousCommand() {
     //  final var idle = new SwerveRequest.Idle();

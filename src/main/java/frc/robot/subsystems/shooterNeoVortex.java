@@ -5,6 +5,15 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+/**
+ * Dual NEO Vortex shooter (SparkFlex controllers).
+ * Provides a handful of fixed-speed helpers that operator buttons select:
+ * - ssssssswirly_whirly(): gentle intake-speed spin
+ * - close(): mid-power shot
+ * - close2(): full-power shot
+ * - spinTheOtherWay(): reverse to clear jams
+ * All helpers are open-loop percent output to keep behavior simple for driver practice.
+ */
 public class shooterNeoVortex extends SubsystemBase {
     SparkFlex topNeo;
     SparkFlex bottonNeo;
