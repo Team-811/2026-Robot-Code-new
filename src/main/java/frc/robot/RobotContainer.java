@@ -2,9 +2,10 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project
 // Driver (controller 0):
-//   - Left stick field-centric translation, right stick X rotation. Inputs are slew-limited and capped at 50% translational / 30% rotational to keep the robot smooth.
-//   - B (hold): FaceAprilTag auto-aims to AprilTags 9/11 using Limelight.
-//   - Start or Back: reseed the field-centric heading to the current gyro angle.
+//   - Left stick translation, right stick X rotation; slew-limited and capped at 50% translation / 30% rotation.
+//   - Y toggles field-centric vs robot-centric drive.
+//   - LB/RB/X latch slow/fast/normal speed modes; B (hold) runs FaceAprilTag to aim at tags 9/11.
+//   - Start or Back reseeds the field-centric heading to the current gyro angle.
 //
 // Operator (controller 1):
 //   - B: spin intake; A: run indexer; Y: fast shooter spin (closeNeo2); LB/RB: raise/lower intake pivot motor.
@@ -14,7 +15,7 @@
 //   - SmartDashboard key "autoChooser" exposes "leftAuto" and "leftDriveAuto" PathPlanner sequences.
 //
 // Notes:
-//   - Default command is CTRE field-centric drive with slew rate limiting for smooth starts/stops.
+//   - Default command is CTRE field-centric drive with slew rate limiting; speed modes scale the cap.
 //   - Drivetrain telemetry is streamed via Telemetry; LimelightShooter pushes updates in its periodic.
 package frc.robot;
 
@@ -22,7 +23,7 @@ package frc.robot;
  * File Overview: Central wiring hub for subsystems, commands, and driver controls.
  * Features/Details:
  * - Instantiates the CTRE swerve drivetrain, shooter/indexer/intake subsystems, Limelight, and telemetry logger.
- * - Wires driver controls for smooth field-centric driving and quick AprilTag snap-to-heading while B is held.
+ * - Wires driver controls for smooth field- or robot-centric driving, speed modes, and quick AprilTag snap-to-heading.
  * - Wires operator controls for intake/indexer/shooter motors with distinct speed presets per button.
  * - Registers a PathPlanner-backed autonomous chooser on the dashboard.
  * - Seeds field-centric heading at startup and streams drivetrain telemetry continuously.
@@ -58,6 +59,7 @@ import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 
@@ -65,8 +67,12 @@ import static edu.wpi.first.units.Units.*;
 public class RobotContainer {
   // TunerConstants encapsulates the drivetrain's measured free-speed; scaling happens in the drive request.
   private final double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
-  // Cap rotation to ~150 deg/s for driver comfort; bump toward 3–4 rot/s if aiming needs to be snappier.
+  // Cap rotation to ~150 deg/s for driver comfort; bump toward 3-4 rot/s if aiming needs to be snappier.
   private final double MaxAngularRate = RotationsPerSecond.of(2.5).in(RadiansPerSecond);
+  private static final double TRANSLATION_SCALAR = 0.5; // global cap for teleop translation
+  private static final double ROTATION_SCALAR = 0.3;    // global cap for teleop rotation
+  private double speedModeScalar = OperatorConstants.normalSpeed;
+  private String speedModeLabel = "normal";
 
   private final Intake intake = new Intake();
   private final Indexer indexer = new Indexer();  
@@ -83,6 +89,7 @@ public class RobotContainer {
   private final SlewRateLimiter slewLimY = new SlewRateLimiter(2.0);
   private final SlewRateLimiter slewLimX = new SlewRateLimiter(2.0);
   private final SlewRateLimiter slewLimRote = new SlewRateLimiter(1.0);
+  private boolean fieldRelative = true;
 
   private final Shooter shooter = new Shooter();
   private final shooterNeoVortex shooterN = new shooterNeoVortex();
@@ -119,26 +126,38 @@ public class RobotContainer {
     
 
     // Default: smooth field-centric drive with conservative caps so practice driving stays tame.
-drivetrain.setDefaultCommand(
-    drivetrain.applyRequest(() -> {
+    drivetrain.setDefaultCommand(
+        drivetrain.applyRequest(() -> {
+            double x = slewLimX.calculate(-MathUtil.applyDeadband(m_driverController.getLeftY(), DEADBAND));
+            double y = slewLimY.calculate(-MathUtil.applyDeadband(m_driverController.getLeftX(), DEADBAND));
+            double rot = slewLimRote.calculate(-MathUtil.applyDeadband(m_driverController.getRightX(), DEADBAND));
 
-        double x = slewLimX.calculate(-MathUtil.applyDeadband(m_driverController.getLeftY(), DEADBAND));
-        double y = slewLimY.calculate(-MathUtil.applyDeadband(m_driverController.getLeftX(), DEADBAND));
-        double rot = slewLimRote.calculate(-MathUtil.applyDeadband(m_driverController.getRightX(), DEADBAND));
+            return buildDriveRequest(x, y, rot);
+        })
+    );
 
-        return new SwerveRequest.FieldCentric()
-            .withDriveRequestType(DriveRequestType.Velocity)
-            .withVelocityX(x * MaxSpeed * 0.5)   // limit translation to 50% to reduce wheelspin and keep control simple
-            .withVelocityY(y * MaxSpeed * 0.5)
-            .withRotationalRate(rot * MaxAngularRate * 0.3); // rotation clamped harder to avoid tipping/snapping
-    })
-);
+    // Toggle field-/robot-centric driving on the driver Y button.
+    m_driverController.y().onTrue(
+        Commands.runOnce(() -> {
+          fieldRelative = !fieldRelative;
+          SmartDashboard.putBoolean("Drive/FieldRelative", fieldRelative);
+        }, drivetrain).ignoringDisable(true)
+    );
+    // Driver speed modes: LB = slow, RB = fast, X = normal.
+    m_driverController.leftBumper().onTrue(
+        Commands.runOnce(() -> setSpeedMode(OperatorConstants.slowSpeed, "slow"), drivetrain).ignoringDisable(true)
+    );
+    m_driverController.rightBumper().onTrue(
+        Commands.runOnce(() -> setSpeedMode(OperatorConstants.fastSpeed, "fast"), drivetrain).ignoringDisable(true)
+    );
+    m_driverController.x().onTrue(
+        Commands.runOnce(() -> setSpeedMode(OperatorConstants.normalSpeed, "normal"), drivetrain).ignoringDisable(true)
+    );
 
-
- final var idle = new SwerveRequest.Idle();
-        RobotModeTriggers.disabled().whileTrue(
-            drivetrain.applyRequest(() -> idle).ignoringDisable(true)
-        );
+    final var idle = new SwerveRequest.Idle();
+    RobotModeTriggers.disabled().whileTrue(
+        drivetrain.applyRequest(() -> idle).ignoringDisable(true)
+    );
     // Placeholder for LED status (CANdle code removed); re-enable here if a CANdle is added back.
 
     //-- SHOOTER VISION -- Vision-assisted align/target commands.
@@ -170,6 +189,8 @@ drivetrain.setDefaultCommand(
   private void publishStaticTelemetry() {
     SmartDashboard.putNumber("Drive/MaxSpeedMps", MaxSpeed);
     SmartDashboard.putNumber("Drive/MaxAngularRateRadPerSec", MaxAngularRate);
+    SmartDashboard.putBoolean("Drive/FieldRelative", fieldRelative);
+    SmartDashboard.putString("Drive/SpeedMode", speedModeLabel);
   }
 
   /**
@@ -194,5 +215,31 @@ drivetrain.setDefaultCommand(
     }
     return auto;
 
+  }
+
+  /** Build either field- or robot-centric drive requests with common scaling/limits applied. */
+  private SwerveRequest buildDriveRequest(double xInput, double yInput, double rotInput) {
+    double vx = xInput * MaxSpeed * TRANSLATION_SCALAR * speedModeScalar;
+    double vy = yInput * MaxSpeed * TRANSLATION_SCALAR * speedModeScalar;
+    double omega = rotInput * MaxAngularRate * ROTATION_SCALAR * speedModeScalar;
+
+    if (fieldRelative) {
+      return new SwerveRequest.FieldCentric()
+          .withDriveRequestType(DriveRequestType.Velocity)
+          .withVelocityX(vx)
+          .withVelocityY(vy)
+          .withRotationalRate(omega);
+    }
+    return new SwerveRequest.RobotCentric()
+        .withDriveRequestType(DriveRequestType.Velocity)
+        .withVelocityX(vx)
+        .withVelocityY(vy)
+        .withRotationalRate(omega);
+  }
+
+  private void setSpeedMode(double scalar, String label) {
+    speedModeScalar = scalar;
+    speedModeLabel = label;
+    SmartDashboard.putString("Drive/SpeedMode", speedModeLabel);
   }
 }
