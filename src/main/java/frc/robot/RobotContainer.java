@@ -63,21 +63,23 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 
 import static edu.wpi.first.units.Units.*;
 public class RobotContainer {
- private final double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
+  // TunerConstants encapsulates the drivetrain's measured free-speed; scaling happens in the drive request.
+  private final double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
+  // Cap rotation to ~150 deg/s for driver comfort; bump toward 3–4 rot/s if aiming needs to be snappier.
+  private final double MaxAngularRate = RotationsPerSecond.of(2.5).in(RadiansPerSecond);
 
-    private final double MaxAngularRate = RotationsPerSecond.of(2.5).in(RadiansPerSecond);
- private final Intake intake = new Intake();
+  private final Intake intake = new Intake();
   private final Indexer indexer = new Indexer();  
   private final intakeForNow intakeArm = new intakeForNow();
 
-    private final Telemetry logger = new Telemetry(MaxSpeed);
+  private final Telemetry logger = new Telemetry(MaxSpeed);
 
-    public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
+  public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
     
 
-  /** Maximum translational speed (m/s) scaled by operator speed factor. */
+  /** Deadband applied to joystick inputs before slew limiting; 0.05–0.1 removes stick drift without hiding fine aim. */
   private static final double DEADBAND = 0.08;
-  // Slew limiters tame acceleration in each axis/rotation to keep the robot smooth.
+  // Slew limiters (units: stick input per second) temper accel/decel to protect carpet and keep motion smooth.
   private final SlewRateLimiter slewLimY = new SlewRateLimiter(2.0);
   private final SlewRateLimiter slewLimX = new SlewRateLimiter(2.0);
   private final SlewRateLimiter slewLimRote = new SlewRateLimiter(1.0);

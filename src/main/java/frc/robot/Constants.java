@@ -22,29 +22,27 @@ public final class Constants {
   public static final class OperatorConstants {
     private OperatorConstants() {}
 
-    // Controller ports
-    public static final int kDriverControllerPort  = 0;  // USB port for driver controller
-    public static final int kOpControllerPort      = 1;  // USB port for operator/controller 2
+    // Controller ports (USB order in DriverStation)
+    public static final int kDriverControllerPort  = 0;  // Primary/drive
+    public static final int kOpControllerPort      = 1;  // Operator/secondary
 
-    // Shared deadzone for stick axes (override individually if needed later).
-    public static final double kDefaultControllerDeadzone = 0.1;                // Default joystick deadband
-    public static final double kJoyRightXDeadzone = kDefaultControllerDeadzone; // Deadband for right stick X axis
-    public static final double kJoyLeftXDeadzone = kDefaultControllerDeadzone;  // Deadband for left stick X axis
-    public static final double kJoyLeftYDeadzone = kDefaultControllerDeadzone;  // Deadband for left stick Y axis
+    // Shared deadzone for stick axes; 0.05-0.15 is common. Keep small to retain fine aiming control.
+    public static final double kDefaultControllerDeadzone = 0.1;
+    public static final double kJoyRightXDeadzone = kDefaultControllerDeadzone; // Rotation
+    public static final double kJoyLeftXDeadzone  = kDefaultControllerDeadzone; // Strafe
+    public static final double kJoyLeftYDeadzone  = kDefaultControllerDeadzone; // Forward/back
                
-    // Base speed scaler applied to the drivetrain (0-1).
-    // USAGE: For SLOW -> Hold right bumper -> slowSpeed (0.5).
-    //        For FAST -> Hold left bumper -> fastSpeed (1.0).
-    //        For NORMAL: Neither bumper -> normalSpeed (0.8 default).
-    public static final double kSpeed = 1.0;        // Base drivetrain speed 'scale' (0-1)
+    // Base speed scaler applied to the drivetrain (0-1). Tune down for rookies or tight fields.
+    public static final double kSpeed = 1.0;
 
-    // Driver speed scaling presets
-    public static final double fastSpeed     = 1.0; // Driver fast speed preset
-    public static final double slowSpeed     = 0.1; // Driver slow speed preset
-    public static final double normalSpeed   = 0.5; // Driver normal speed preset
+    // Driver speed scaling presets (multiplied into MaxSpeed/MaxAngularRate).
+    // Use 0.8-1.0 for full field, 0.3-0.6 for controlled scoring lanes.
+    public static final double fastSpeed     = 1.0; // Full power
+    public static final double slowSpeed     = 0.1; // Crawl/precision
+    public static final double normalSpeed   = 0.5; // Everyday practice speed
 
     // Hardware IDs and limits
-    public static final double kSlipCurrent  = 120; // Current threshold for slip protection
+    public static final double kSlipCurrent  = 120; // Amps where wheels likely slip; typical FRC range 80-150 A
     public static final int neoId            = 18;  // CAN ID for NEO motor controller
     public static final int elKrakenId       = 23;  // CAN ID for elevator Kraken motor
     public static final int fDoubSolC1       = 2;   // PCM channel for front double solenoid forward
