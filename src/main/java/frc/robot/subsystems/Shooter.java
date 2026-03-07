@@ -1,13 +1,21 @@
 package frc.robot.subsystems;
 
-import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.configs.ClosedLoopRampsConfigs;
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
+import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.configs.VoltageConfigs;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 /**
@@ -18,7 +26,14 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
  */
 public class Shooter extends SubsystemBase {
 
-    private final TalonFX shooterMotor = new TalonFX(55, "*");
+    private static final String CAN_BUS = "CANivore";
+    private static final int SHOOTER_ID = 55;
+    private static final double SUPPLY_LIMIT_AMPS = 50.0;
+    private static final double STATOR_LIMIT_AMPS = 80.0;
+    private static final double CLOSED_LOOP_RAMP_S = 0.1;
+    private static final double VOLTAGE_COMP_SAT = 12.0;
+
+    private final TalonFX shooterMotor = new TalonFX(SHOOTER_ID, CAN_BUS);
     private final VelocityVoltage velocityRequest = new VelocityVoltage(0);
 
     private static final String LIMELIGHT_NAME = "limelight-shooter";
@@ -47,23 +62,45 @@ public class Shooter extends SubsystemBase {
         slot0.kD = 0;
         slot0.kV = 0.12;
 
-        shooterMotor.getConfigurator().apply(slot0);
+        TalonFXConfiguration cfg = new TalonFXConfiguration()
+            .withSlot0(slot0)
+            .withMotorOutput(new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Coast))
+            .withCurrentLimits(new CurrentLimitsConfigs()
+                .withSupplyCurrentLimit(SUPPLY_LIMIT_AMPS)
+                .withSupplyCurrentLimitEnable(true)
+                .withStatorCurrentLimit(STATOR_LIMIT_AMPS)
+                .withStatorCurrentLimitEnable(true))
+            .withVoltage(new VoltageConfigs().withPeakForwardVoltage(VOLTAGE_COMP_SAT).withPeakReverseVoltage(-VOLTAGE_COMP_SAT))
+            .withClosedLoopRamps(new ClosedLoopRampsConfigs().withVoltageClosedLoopRampPeriod(CLOSED_LOOP_RAMP_S));
 
-        distanceToRPM.put(1.0, -750.0);
-        // distanceToRPM.put(2.5, -3500.0);
-        distanceToRPM.put(2.0, -1800.0);
-        distanceToRPM.put(3.0, -2500.0);
+        shooterMotor.getConfigurator().apply(cfg);
+        shooterMotor.setInverted(false); // keep RPM table positive
+
+        distanceToRPM.put(1.0, 750.0);
+        distanceToRPM.put(2.0, 1800.0);
+        distanceToRPM.put(3.0, 2500.0);
     }
 
     public void runShooterWithLimelight() {
-        double distance = getDistanceMeters();
-        if (distance < 0) {
+        boolean hasTarget = limelightTable.getEntry("tv").getDouble(0) == 1;
+        if (!hasTarget) {
+            targetRPM = 0;
             stopShooter();
             return;
         }
 
-        Double rpm = distanceToRPM.get(distance);
-        if (rpm == null) return;
+        double distance = getDistanceMeters();
+        double clampedDistance = MathUtil.clamp(
+            distance,
+            distanceToRPM.firstKey(),
+            distanceToRPM.lastKey()
+        );
+
+        Double rpm = distanceToRPM.get(clampedDistance);
+        if (rpm == null) {
+            stopShooter();
+            return;
+        }
 
         targetRPM = rpm;
 
@@ -98,11 +135,9 @@ public class Shooter extends SubsystemBase {
     }
     @Override
 public void periodic() {
-    double tv = NetworkTableInstance.getDefault()
-        .getTable("limelight-shooter")
-        .getEntry("tv")
-        .getDouble(0);
-
-    // System.out.println("Limelight tv: " + tv);
+    double currentRPS = shooterMotor.getVelocity().getValueAsDouble();
+    SmartDashboard.putNumber("Shooter/TargetRPM", targetRPM);
+    SmartDashboard.putNumber("Shooter/VelocityRPM", currentRPS * 60.0);
+    SmartDashboard.putBoolean("Shooter/AtSpeed", isAtSpeed());
 }
 }
