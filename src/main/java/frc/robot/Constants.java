@@ -83,9 +83,9 @@ public final class Constants {
     private ClimberConstants() {}
 
     // CAN IDs (set to your wiring; ensure they are unique to avoid CAN conflicts)
-    public static final int liftLeftNeoId  = 31;
-    public static final int liftRightNeoId = 32;
-    public static final int hookMotorId    = 33; // Johnson gearmotor controller
+    public static final int liftLeftNeoId  = 31; // Left NEO
+    public static final int liftRightNeoId = 32; // Right NEO
+    public static final int hookMotorId    = 33; // Johnson gearmotor
 
     // Speeds (percent output 0-1). Keep conservative to avoid shock loads; increase only after testing.
     public static final double liftUpSpeed     = 0.7;

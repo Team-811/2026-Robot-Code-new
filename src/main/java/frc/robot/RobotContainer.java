@@ -1,15 +1,25 @@
 // Copyright (c) FIRST and other WPILib contributors.
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project
+//
 // Driver (controller 0):
 //   - Left stick translation, right stick X rotation; slew-limited and capped at 50% translation / 30% rotation.
 //   - Y toggles field-centric vs robot-centric drive.
-//   - LB/RB/X latch slow/fast/normal speed modes; B (hold) runs FaceAprilTag to aim at tags 9/11.
+//   - LB/RB/X latch slow/fast/normal speed modes; 
+//   - B (hold) runs FaceAprilTag to aim at tags 2,3,4,10.
 //   - Start or Back reseeds the field-centric heading to the current gyro angle.
 //
 // Operator (controller 1):
-//   - B: spin intake; A: run indexer; Y: fast shooter spin (closeNeo2); LB/RB: raise/lower intake pivot motor.
-//   - LT: slow shooter spin; X: medium shooter spin; RT: Limelight-based Falcon shooter; Start: reverse shooter.
+//   - B: spin intake; 
+//   - A: run indexer; 
+//   - Y: fast shooter spin (closeNeo2); 
+//   - LB/RB: raise/lower intake pivot motor.
+//   - LT: slow shooter spin; 
+//   - X: medium shooter spin; 
+//   - RT: Limelight-based Falcon shooter; 
+//   - Start: reverse shooter.
+//   - POV Up: run climb sequence (hook, lift, hook next rung, lift); 
+//   - POV Down: descend sequence (open hook, lower).
 //
 // Autonomous chooser:
 //   - SmartDashboard key "autoChooser" exposes "leftAuto" and "leftDriveAuto" PathPlanner sequences.
@@ -105,7 +115,7 @@ public class RobotContainer {
   // Driver controls (single Xbox assumed for drivetrain + vision assist).
   private final CommandXboxController m_driverController =
       new CommandXboxController(OperatorConstants.kDriverControllerPort);
-      private final CommandXboxController c = new CommandXboxController(OperatorConstants.kOpControllerPort);
+      private final CommandXboxController c_CommandController = new CommandXboxController(OperatorConstants.kOpControllerPort);
 
   private final SendableChooser<String> autoChooser;
 
@@ -174,22 +184,22 @@ public class RobotContainer {
         
      
 
-     c.b().whileTrue(new IntakeSpin(intake));
-     c.a().whileTrue(new IndexSpin(indexer));
-    c.y().whileTrue(new closeNeo2(shooterN));
-     c.leftBumper().whileTrue(new raiseIntake(intakeArm));
-    c.rightBumper().whileTrue(new lowerIntake(intakeArm));
+    c_CommandController.b().whileTrue(new IntakeSpin(intake));
+    c_CommandController.a().whileTrue(new IndexSpin(indexer));
+    c_CommandController.y().whileTrue(new closeNeo2(shooterN));
+    c_CommandController.leftBumper().whileTrue(new raiseIntake(intakeArm));
+    c_CommandController.rightBumper().whileTrue(new lowerIntake(intakeArm));
 
 
     
-    c.leftTrigger().whileTrue(new shooterCommand(shooterN));
-    c.x().whileTrue(new closeShooter(shooterN));
-    c.rightTrigger().whileTrue(new shooterLime(shooter));
-    c.start().whileTrue(new reverseShooter(shooterN));
+    c_CommandController.leftTrigger().whileTrue(new shooterCommand(shooterN));
+    c_CommandController.x().whileTrue(new closeShooter(shooterN));
+    c_CommandController.rightTrigger().whileTrue(new shooterLime(shooter));
+    c_CommandController.start().whileTrue(new reverseShooter(shooterN));
 
     // Climber: POV up to run climb sequence, POV down to descend. Toggle cancels/restarts.
-    c.povUp().toggleOnTrue(new ClimbCommand(elevator));
-    c.povDown().toggleOnTrue(new DescendCommand(elevator));
+    c_CommandController.povUp().toggleOnTrue(new ClimbCommand(elevator));
+    c_CommandController.povDown().toggleOnTrue(new DescendCommand(elevator));
     drivetrain.registerTelemetry(logger::telemeterize);
   }
 
