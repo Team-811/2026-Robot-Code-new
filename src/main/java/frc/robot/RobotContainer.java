@@ -83,8 +83,6 @@ public class RobotContainer {
   private final double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
   // Cap rotation to ~150 deg/s for driver comfort; bump toward 3-4 rot/s if aiming needs to be snappier.
   private final double MaxAngularRate = RotationsPerSecond.of(2.5).in(RadiansPerSecond);
-  private static final double TRANSLATION_SCALAR = 0.5; // global cap for teleop translation
-  private static final double ROTATION_SCALAR = 0.3;    // global cap for teleop rotation
   private double speedModeScalar = OperatorConstants.normalSpeed;
   private String speedModeLabel = "normal";
 
@@ -239,9 +237,9 @@ public class RobotContainer {
 
   /** Build either field- or robot-centric drive requests with common scaling/limits applied. */
   private SwerveRequest buildDriveRequest(double xInput, double yInput, double rotInput) {
-    double vx = xInput * MaxSpeed * TRANSLATION_SCALAR * speedModeScalar;
-    double vy = yInput * MaxSpeed * TRANSLATION_SCALAR * speedModeScalar;
-    double omega = rotInput * MaxAngularRate * ROTATION_SCALAR * speedModeScalar;
+    double vx     = xInput   * MaxSpeed * speedModeScalar;
+    double vy     = yInput   * MaxSpeed * speedModeScalar;
+    double omega  = rotInput * MaxAngularRate * speedModeScalar;
 
     if (fieldRelative) {
       return new SwerveRequest.FieldCentric()
@@ -258,7 +256,7 @@ public class RobotContainer {
   }
 
   private void setSpeedMode(double scalar, String label) {
-    speedModeScalar = scalar;
+    speedModeScalar = scalar * OperatorConstants.drivetrainSpeedCap; //with global spped cap
     speedModeLabel = label;
     SmartDashboard.putString("Drive/SpeedMode", speedModeLabel);
   }

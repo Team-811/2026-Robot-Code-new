@@ -32,14 +32,14 @@ public final class Constants {
     public static final double kJoyLeftXDeadzone  = kDefaultControllerDeadzone; // Strafe
     public static final double kJoyLeftYDeadzone  = kDefaultControllerDeadzone; // Forward/back
                
-    // Base speed scaler applied to the drivetrain (0-1). Tune down for rookies or tight fields.
-    public static final double kSpeed = 1.0;
+    // DRIVETRAIN speed scaler (0-1). Tune down for rookies or tight fields.
+    public static final double drivetrainSpeedCap = 0.5; 
 
     // Driver speed scaling presets (multiplied into MaxSpeed/MaxAngularRate).
     // Use 0.8-1.0 for full field, 0.3-0.6 for controlled scoring lanes.
     public static final double fastSpeed     = 1.0; // Full power
-    public static final double slowSpeed     = 0.1; // Crawl/precision
-    public static final double normalSpeed   = 0.5; // Everyday practice speed
+    public static final double slowSpeed     = 0.2; // Crawl/precision
+    public static final double normalSpeed   = 0.7; // Everyday practice speed
 
     // Hardware IDs and limits
     public static final double kSlipCurrent  = 120; // Amps where wheels likely slip; typical FRC range 80-150 A
