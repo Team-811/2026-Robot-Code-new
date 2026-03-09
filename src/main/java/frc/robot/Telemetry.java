@@ -95,15 +95,11 @@ public class Telemetry {
         driveTimestamp.set(state.Timestamp);
         driveOdometryFrequency.set(1.0 / state.OdometryPeriod);
 
-        // Quick-look SmartDashboard values for drivers/mentors.
+        // Quick-look SmartDashboard values for drivers/mentors (trimmed to essentials).
         SmartDashboard.putNumber("Drive/PoseX", state.Pose.getX());
         SmartDashboard.putNumber("Drive/PoseY", state.Pose.getY());
         SmartDashboard.putNumber("Drive/HeadingDeg", state.Pose.getRotation().getDegrees());
-        SmartDashboard.putNumber("Drive/VxMps", state.Speeds.vxMetersPerSecond);
-        SmartDashboard.putNumber("Drive/VyMps", state.Speeds.vyMetersPerSecond);
-        SmartDashboard.putNumber("Drive/OmegaRadPerSec", state.Speeds.omegaRadiansPerSecond);
         SmartDashboard.putNumber("Drive/SpeedMps", Math.hypot(state.Speeds.vxMetersPerSecond, state.Speeds.vyMetersPerSecond));
-        SmartDashboard.putNumber("Drive/OdometryHz", 1.0 / state.OdometryPeriod);
 
         /* Also write to log file */
         SignalLogger.writeStruct("DriveState/Pose", Pose2d.struct, state.Pose);

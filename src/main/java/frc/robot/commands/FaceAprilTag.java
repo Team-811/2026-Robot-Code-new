@@ -79,22 +79,15 @@ public class FaceAprilTag extends Command {
     double omegaRad = Units.degreesToRadians(MathUtil.clamp(omegaDeg, -MAX_ROTATE_DEG_PER_SEC, MAX_ROTATE_DEG_PER_SEC));
     omegaRad = omegaSlew.calculate(omegaRad);
 
-    double pidErrorDeg = yawPID.getError();
     boolean atSetpoint = yawPID.atSetpoint();
-    double tv = LimelightShooter.getTV();
-    double pipeline = LimelightHelpers.getCurrentPipelineIndex(LimelightShooter.LL_NAME);
 
     myDrivetrain.setControl(
         driveRequest.withVelocityX(0).withVelocityY(0).withRotationalRate(omegaRad));
 
-    // Live debug telemetry for aiming.
+    // Live debug telemetry for aiming (trimmed to essentials).
     SmartDashboard.putBoolean("FaceAprilTag/Active", true);
     SmartDashboard.putNumber("FaceAprilTag/TxDegrees", txDeg);
-    SmartDashboard.putNumber("FaceAprilTag/OmegaCmdRad", omegaRad);
-    SmartDashboard.putNumber("FaceAprilTag/PidErrorDeg", pidErrorDeg);
     SmartDashboard.putBoolean("FaceAprilTag/AtSetpoint", atSetpoint);
-    SmartDashboard.putNumber("FaceAprilTag/TvRaw", tv);
-    SmartDashboard.putNumber("FaceAprilTag/Pipeline", pipeline);
 
     // Track on-target dwell to prevent a single good frame from ending the command.
     if (atSetpoint) {

@@ -52,7 +52,6 @@ public final class Constants {
     public static final int fDoubSolA        = 0;   // PCM module address for front double solenoid
     public static final int rDoubSolA        = 1;   // PCM module address for rear double solenoid
     public static final int cArmId           = 24;  // CAN ID for arm motor controller
-    public static final int climbId          = 30;  // CAN ID for climber motor controller
     public static final double kElDeadBand   = 3;   // Elevator deadband to ignore small commands
 
     // Shooter CAN IDs (two motors driving the shooter wheels).
@@ -83,9 +82,9 @@ public final class Constants {
     private ClimberConstants() {}
 
     // CAN IDs (set to your wiring; ensure they are unique to avoid CAN conflicts)
-    public static final int liftLeftNeoId  = 31;
-    public static final int liftRightNeoId = 32;
-    public static final int hookMotorId    = 33; // Johnson gearmotor controller
+    public static final int liftLeftNeoId  = 31; // Left NEO
+    public static final int liftRightNeoId = 32; // Right NEO
+    public static final int hookMotorId    = 33; // Johnson gearmotor
 
     // Speeds (percent output 0-1). Keep conservative to avoid shock loads; increase only after testing.
     public static final double liftUpSpeed     = 0.7;
