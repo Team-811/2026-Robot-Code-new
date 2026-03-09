@@ -60,6 +60,7 @@ import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.intakeForNow;       
 import frc.robot.subsystems.shooterNeoVortex;
 import frc.robot.subsystems.Elevator;
+import frc.robot.subsystems.CANdleLED;
 import frc.robot.commands.ClimbCommand;
 import frc.robot.commands.DescendCommand;
 
@@ -110,12 +111,13 @@ public class RobotContainer {
 
 
   private final LimelightShooter limeShooter = new LimelightShooter(); // primary LL4 (scoring/AprilTag aim)
+  private final CANdleLED candle = new CANdleLED(LimelightShooter::hasTarget);
 
 
   // Driver controls (single Xbox assumed for drivetrain + vision assist).
   private final CommandXboxController m_driverController =
       new CommandXboxController(OperatorConstants.kDriverControllerPort);
-      private final CommandXboxController c_CommandController = new CommandXboxController(OperatorConstants.kOpControllerPort);
+      private final CommandXboxController c_OperatorController = new CommandXboxController(OperatorConstants.kOpControllerPort);
 
   private final SendableChooser<String> autoChooser;
 
@@ -172,7 +174,7 @@ public class RobotContainer {
     RobotModeTriggers.disabled().whileTrue(
         drivetrain.applyRequest(() -> idle).ignoringDisable(true)
     );
-    // Placeholder for LED status (CANdle code removed); re-enable here if a CANdle is added back.
+    // CANdle auto-updates via subsystem periodic; no button bindings required.
 
     //-- SHOOTER VISION -- Vision-assisted align/target commands.
     // Run face-to-tag only while B is held so driver regains control on release.
@@ -184,22 +186,22 @@ public class RobotContainer {
         
      
 
-    c_CommandController.b().whileTrue(new IntakeSpin(intake));
-    c_CommandController.a().whileTrue(new IndexSpin(indexer));
-    c_CommandController.y().whileTrue(new closeNeo2(shooterN));
-    c_CommandController.leftBumper().whileTrue(new raiseIntake(intakeArm));
-    c_CommandController.rightBumper().whileTrue(new lowerIntake(intakeArm));
+    c_OperatorController.b().whileTrue(new IntakeSpin(intake));
+    c_OperatorController.a().whileTrue(new IndexSpin(indexer));
+    c_OperatorController.y().whileTrue(new closeNeo2(shooterN));
+    c_OperatorController.leftBumper().whileTrue(new raiseIntake(intakeArm));
+    c_OperatorController.rightBumper().whileTrue(new lowerIntake(intakeArm));
 
 
     
-    c_CommandController.leftTrigger().whileTrue(new shooterCommand(shooterN));
-    c_CommandController.x().whileTrue(new closeShooter(shooterN));
-    c_CommandController.rightTrigger().whileTrue(new shooterLime(shooter));
-    c_CommandController.start().whileTrue(new reverseShooter(shooterN));
+    c_OperatorController.leftTrigger().whileTrue(new shooterCommand(shooterN));
+    c_OperatorController.x().whileTrue(new closeShooter(shooterN));
+    c_OperatorController.rightTrigger().whileTrue(new shooterLime(shooter));
+    c_OperatorController.start().whileTrue(new reverseShooter(shooterN));
 
     // Climber: POV up to run climb sequence, POV down to descend. Toggle cancels/restarts.
-    c_CommandController.povUp().toggleOnTrue(new ClimbCommand(elevator));
-    c_CommandController.povDown().toggleOnTrue(new DescendCommand(elevator));
+    c_OperatorController.povUp().toggleOnTrue(new ClimbCommand(elevator));
+    c_OperatorController.povDown().toggleOnTrue(new DescendCommand(elevator));
     drivetrain.registerTelemetry(logger::telemeterize);
   }
 

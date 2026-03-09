@@ -79,17 +79,10 @@ public class LimelightShooter extends SubsystemBase{
      * Publishes current snapshot to SmartDashboard. Keeps keys namespaced under "LimelightShooter/".
      */
     public void updateDashboard(){
-        //post to smart dashboard periodically
+        // Minimal driver-facing status: is it seeing, how far, and horizontal error.
         SmartDashboard.putBoolean("Limelight/Shooter/Valid", v > 0.5); // tv is 0/1; publish as boolean for clarity
-        SmartDashboard.putNumber("Limelight/Shooter/XDegrees", x);
-        SmartDashboard.putNumber("Limelight/Shooter/YDegrees", y);
-        SmartDashboard.putNumber("Limelight/Shooter/Area", area);
-        SmartDashboard.putNumber("Limelight/Shooter/DistanceX", distX);
-        SmartDashboard.putNumber("Limelight/Shooter/DistanceY", distY);
-        SmartDashboard.putNumber("Limelight/Shooter/DistanceZ", distZ);
-        SmartDashboard.putNumber("Limelight/Shooter/TargetYawRadians", angleTargetRadians);
-        SmartDashboard.putNumber("Limelight/Shooter/FiducialId", fiducialID);
-        SmartDashboard.putNumber("Limelight/Shooter/RobotYawRadians", robotYaw);
+        SmartDashboard.putNumber("Limelight/Shooter/TxDegrees", x);
+        SmartDashboard.putNumber("Limelight/Shooter/RangeMeters", distZ);
         SmartDashboard.putString("Limelight/Shooter/Status", v > 0.5 ? "Target Acquired" : "No Target");
     }
     @Override

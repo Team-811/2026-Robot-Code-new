@@ -76,15 +76,8 @@ public class LimelightClimber extends SubsystemBase {
      */
     public void updateDashboard() {
         SmartDashboard.putBoolean("Limelight/Climber/Valid", v > 0.5);
-        SmartDashboard.putNumber("Limelight/Climber/XDegrees", x);
-        SmartDashboard.putNumber("Limelight/Climber/YDegrees", y);
-        SmartDashboard.putNumber("Limelight/Climber/Area", area);
-        SmartDashboard.putNumber("Limelight/Climber/DistanceX", distX);
-        SmartDashboard.putNumber("Limelight/Climber/DistanceY", distY);
-        SmartDashboard.putNumber("Limelight/Climber/DistanceZ", distZ);
-        SmartDashboard.putNumber("Limelight/Climber/TargetYawRadians", angleTargetRadians);
-        SmartDashboard.putNumber("Limelight/Climber/FiducialId", fiducialID);
-        SmartDashboard.putNumber("Limelight/Climber/RobotYawRadians", robotYaw);
+        SmartDashboard.putNumber("Limelight/Climber/TxDegrees", x);
+        SmartDashboard.putNumber("Limelight/Climber/RangeMeters", distZ);
         SmartDashboard.putString("Limelight/Climber/Status", v > 0.5 ? "Target Acquired" : "No Target");
     }
 

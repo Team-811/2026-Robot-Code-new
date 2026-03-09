@@ -140,6 +140,5 @@ public void periodic() {
         SmartDashboard.putNumber("Shooter/TargetRPM", targetRPM);
         SmartDashboard.putNumber("Shooter/VelocityRPM", currentRPS * 60.0);
         SmartDashboard.putBoolean("Shooter/AtSpeed", isAtSpeed());
-        SmartDashboard.putNumber("Shooter/DistanceMeters", getDistanceMeters());
     }
 }
