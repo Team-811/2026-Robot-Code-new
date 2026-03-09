@@ -181,16 +181,13 @@ public class RobotContainer {
     // Heading reseed helpers (both Start and Back give drivers a quick way to fix field-centric zero).
     m_driverController.start().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
     m_driverController.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
-        
-     
-
+             
+    // Operator controls: intake/indexer/shooter with distinct presets per button.
     c_OperatorController.b().whileTrue(new IntakeSpin(intake));
     c_OperatorController.a().whileTrue(new IndexSpin(indexer));
     c_OperatorController.y().whileTrue(new closeNeo2(shooterN));
     c_OperatorController.leftBumper().whileTrue(new raiseIntake(intakeArm));
     c_OperatorController.rightBumper().whileTrue(new lowerIntake(intakeArm));
-
-
     
     c_OperatorController.leftTrigger().whileTrue(new shooterCommand(shooterN));
     c_OperatorController.x().whileTrue(new closeShooter(shooterN));

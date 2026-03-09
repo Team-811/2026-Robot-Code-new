@@ -7,6 +7,7 @@ import com.ctre.phoenix6.controls.SolidColor;
 import com.ctre.phoenix6.hardware.CANdle;
 import com.ctre.phoenix6.signals.RGBWColor;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.CANdleConstants;
 
@@ -41,5 +42,7 @@ public class CANdleLED extends SubsystemBase {
       lastTargetState = hasTarget;
       candle.setControl(hasTarget ? greenRequest : offRequest);
     }
+    SmartDashboard.putBoolean("CANdle/HasTarget", hasTarget);
+    SmartDashboard.putString("CANdle/State", hasTarget ? "Green" : "Off");
   }
 }
