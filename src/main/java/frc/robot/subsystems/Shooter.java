@@ -59,10 +59,11 @@ public class Shooter extends SubsystemBase {
 
         // Velocity closed-loop gains. Run SysId to replace these with measured kS/kV/kA and tuned kP.
         Slot0Configs slot0 = new Slot0Configs();
-        slot0.kP = 0.12;
-        slot0.kI = 0;
+        slot0.kP = 1;//0.12
+        slot0.kI = 2;
         slot0.kD = 0;
-        slot0.kV = 0.12;
+        slot0.kA = 0.4;
+        slot0.kV = 0.12;//0.12
 
         TalonFXConfiguration cfg = new TalonFXConfiguration()
             .withSlot0(slot0)
