@@ -36,6 +36,7 @@ import frc.robot.commands.IndexSpin;
 import frc.robot.commands.IntakeSpin;
 import frc.robot.commands.closeNeo2;
 import frc.robot.commands.closeShooter;
+import frc.robot.commands.goToMidAuto;
 import frc.robot.commands.leftAuto;
 import frc.robot.commands.leftDriveAuto;
 import frc.robot.commands.lowerIntake;
@@ -87,9 +88,9 @@ public class RobotContainer {
   /** Deadband applied to joystick inputs before slew limiting; 0.05–0.1 removes stick drift without hiding fine aim. */
   private static final double DEADBAND = 0.08;
   // Slew limiters (units: stick input per second) temper accel/decel to protect carpet and keep motion smooth.
-  private final SlewRateLimiter slewLimY = new SlewRateLimiter(2.0);
-  private final SlewRateLimiter slewLimX = new SlewRateLimiter(2.0);
-  private final SlewRateLimiter slewLimRote = new SlewRateLimiter(1.0);
+  private final SlewRateLimiter slewLimY = new SlewRateLimiter(3);
+  private final SlewRateLimiter slewLimX = new SlewRateLimiter(3);
+  private final SlewRateLimiter slewLimRote = new SlewRateLimiter(6);
   private boolean fieldRelative = true;
 
   private final Shooter shooter = new Shooter();
@@ -118,6 +119,7 @@ public class RobotContainer {
     autoChooser = new SendableChooser<String>();
     autoChooser.addOption("leftAuto", "leftAuto");
     autoChooser.addOption("leftDriveAuto", "leftDriveAuto");
+        autoChooser.addOption("goToMidAuto", "goToMidAuto");
     SmartDashboard.putData("autoChooser",autoChooser);
 
   }
@@ -128,15 +130,29 @@ public class RobotContainer {
     
 
     // Default: smooth field-centric drive with conservative caps so practice driving stays tame.
-    drivetrain.setDefaultCommand(
-        drivetrain.applyRequest(() -> {
-            double x = slewLimX.calculate(-MathUtil.applyDeadband(m_driverController.getLeftY(), DEADBAND));
-            double y = slewLimY.calculate(-MathUtil.applyDeadband(m_driverController.getLeftX(), DEADBAND));
-            double rot = slewLimRote.calculate(-MathUtil.applyDeadband(m_driverController.getRightX(), DEADBAND));
+    // drivetrain.setDefaultCommand(
+    //     drivetrain.applyRequest(() -> {
+    //         double x = slewLimX.calculate(-MathUtil.applyDeadband(m_driverController.getLeftY(), DEADBAND));
+    //         double y = slewLimY.calculate(-MathUtil.applyDeadband(m_driverController.getLeftX(), DEADBAND));
+    //         double rot = slewLimRote.calculate(-MathUtil.applyDeadband(m_driverController.getRightX(), DEADBAND));
 
-            return buildDriveRequest(x, y, rot);
-        })
-    );
+    //         return buildDriveRequest(x, y, rot);
+    //     })
+    // );
+    drivetrain.setDefaultCommand(
+    drivetrain.applyRequest(() -> {
+
+        double x = slewLimX.calculate(-MathUtil.applyDeadband(m_driverController.getLeftY(), DEADBAND));
+        double y = slewLimY.calculate(-MathUtil.applyDeadband(m_driverController.getLeftX(), DEADBAND));
+        double rot = slewLimRote.calculate(-MathUtil.applyDeadband(m_driverController.getRightX(), DEADBAND));
+
+        return new SwerveRequest.RobotCentric()
+            .withDriveRequestType(DriveRequestType.Velocity)
+            .withVelocityX(x * MaxSpeed * 0.3)
+            .withVelocityY(y * MaxSpeed * 0.3)
+            .withRotationalRate(rot * MaxAngularRate * 0.2);
+    })
+);
 
     // Toggle field-/robot-centric driving on the driver Y button.
     m_driverController.y().onTrue(
@@ -213,6 +229,9 @@ public class RobotContainer {
         break;
       case "leftDriveAuto":
         auto = new leftDriveAuto(drivetrain, shooterN, shooter, limeShooter, indexer);
+        break;
+        case "goToMidAuto":
+        auto = new goToMidAuto(drivetrain, shooterN, shooter, intakeArm, indexer, intake, limeShooter);
         break;
     case "justMove":
       default: 
