@@ -32,13 +32,13 @@ public final class Constants {
     public static final double kJoyLeftXDeadzone  = kDefaultControllerDeadzone; // Strafe
     public static final double kJoyLeftYDeadzone  = kDefaultControllerDeadzone; // Forward/back
                
-    // DRIVETRAIN speed scaler (0-1). Tune down for rookies or tight fields.
-    public static final double drivetrainSpeedCap = 0.5; 
+    // DRIVETRAIN speed scaler (0-1). Keep at 1.0 so mode scalars are single-source; lower only for global safety.
+    public static final double drivetrainSpeedCap = 1.0; 
 
     // Driver speed scaling presets (multiplied into MaxSpeed/MaxAngularRate).
-    // Use 0.8-1.0 for full field, 0.3-0.6 for controlled scoring lanes.
+    // Use 1.0 for full field, 0.6-0.7 for controlled scoring lanes, 0.3-0.4 for fine work.
     public static final double fastSpeed     = 1.0; // Full power
-    public static final double slowSpeed     = 0.2; // Crawl/precision
+    public static final double slowSpeed     = 0.35; // Crawl/precision
     public static final double normalSpeed   = 0.7; // Everyday practice speed
 
     // Hardware IDs and limits

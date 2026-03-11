@@ -3,7 +3,7 @@
 // the WPILib BSD license file in the root directory of this project
 //
 // Driver (controller 0):
-//   - Left stick translation, right stick X rotation; slew-limited and capped at 50% translation / 30% rotation.
+ //   - Left stick translation, right stick X rotation; velocity slew-limited, speed modes: slow 35%, normal 70%, fast 100%.
 //   - Y toggles field-centric vs robot-centric drive.
 //   - LB/RB/X latch slow/fast/normal speed modes; 
 //   - B (hold) runs FaceAprilTag to aim at tags 2,3,4,10.
@@ -81,8 +81,8 @@ import static edu.wpi.first.units.Units.*;
 public class RobotContainer {
   // TunerConstants encapsulates the drivetrain's measured free-speed; scaling happens in the drive request.
   private final double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
-  // Cap rotation to ~150 deg/s for driver comfort; bump toward 3-4 rot/s if aiming needs to be snappier.
-  private final double MaxAngularRate = RotationsPerSecond.of(2.5).in(RadiansPerSecond);
+  // Cap rotation to ~470 deg/s for driver comfort; raise if you want snappier snap-turns.
+  private final double MaxAngularRate = RotationsPerSecond.of(1.3).in(RadiansPerSecond);
   private double speedModeScalar = OperatorConstants.normalSpeed;
   private String speedModeLabel = "normal";
 
@@ -97,10 +97,10 @@ public class RobotContainer {
 
   /** Deadband applied to joystick inputs before slew limiting; 0.05–0.1 removes stick drift without hiding fine aim. */
   private static final double DEADBAND = 0.08;
-  // Slew limiters (units: stick input per second) temper accel/decel to protect carpet and keep motion smooth.
-  private final SlewRateLimiter slewLimY = new SlewRateLimiter(2.0);
-  private final SlewRateLimiter slewLimX = new SlewRateLimiter(2.0);
-  private final SlewRateLimiter slewLimRote = new SlewRateLimiter(1.0);
+  // Slew limiters in real units to smooth accel/decel instead of stick space.
+  private final SlewRateLimiter velLimiterY = new SlewRateLimiter(3.0);
+  private final SlewRateLimiter velLimiterX = new SlewRateLimiter(3.0);
+  private final SlewRateLimiter omegaLimiter = new SlewRateLimiter(6.0);
   private boolean fieldRelative = true;
 
   private final Shooter shooter = new Shooter();
@@ -142,11 +142,19 @@ public class RobotContainer {
     // Default: smooth field-centric drive with conservative caps so practice driving stays tame.
     drivetrain.setDefaultCommand(
         drivetrain.applyRequest(() -> {
-            double x = slewLimX.calculate(-MathUtil.applyDeadband(m_driverController.getLeftY(), DEADBAND));
-            double y = slewLimY.calculate(-MathUtil.applyDeadband(m_driverController.getLeftX(), DEADBAND));
-            double rot = slewLimRote.calculate(-MathUtil.applyDeadband(m_driverController.getRightX(), DEADBAND));
+            double xInput = -MathUtil.applyDeadband(m_driverController.getLeftY(), DEADBAND);
+            double yInput = -MathUtil.applyDeadband(m_driverController.getLeftX(), DEADBAND);
+            double rotInput = -MathUtil.applyDeadband(m_driverController.getRightX(), DEADBAND);
 
-            return buildDriveRequest(x, y, rot);
+            double targetVx = xInput * MaxSpeed * speedModeScalar;
+            double targetVy = yInput * MaxSpeed * speedModeScalar;
+            double targetOmega = rotInput * MaxAngularRate * speedModeScalar;
+
+            double vx = velLimiterX.calculate(targetVx);
+            double vy = velLimiterY.calculate(targetVy);
+            double omega = omegaLimiter.calculate(targetOmega);
+
+            return buildDriveRequest(vx, vy, omega);
         })
     );
 
@@ -232,12 +240,8 @@ public class RobotContainer {
 
   }
 
-  /** Build either field- or robot-centric drive requests with common scaling/limits applied. */
-  private SwerveRequest buildDriveRequest(double xInput, double yInput, double rotInput) {
-    double vx     = xInput   * MaxSpeed * speedModeScalar;
-    double vy     = yInput   * MaxSpeed * speedModeScalar;
-    double omega  = rotInput * MaxAngularRate * speedModeScalar;
-
+  /** Build either field- or robot-centric drive requests using already-scaled velocities. */
+  private SwerveRequest buildDriveRequest(double vx, double vy, double omega) {
     if (fieldRelative) {
       return new SwerveRequest.FieldCentric()
           .withDriveRequestType(DriveRequestType.Velocity)
@@ -253,7 +257,7 @@ public class RobotContainer {
   }
 
   private void setSpeedMode(double scalar, String label) {
-    speedModeScalar = scalar * OperatorConstants.drivetrainSpeedCap; //with global spped cap
+    speedModeScalar = MathUtil.clamp(scalar * OperatorConstants.drivetrainSpeedCap, 0.0, 1.0);
     speedModeLabel = label;
     SmartDashboard.putString("Drive/SpeedMode", speedModeLabel);
   }
