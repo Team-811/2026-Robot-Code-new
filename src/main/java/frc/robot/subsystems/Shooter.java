@@ -146,21 +146,27 @@
 // }
 package frc.robot.subsystems;
 
+import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.MotorAlignmentValue;
+import com.ctre.phoenix.motorcontrol.IFollower;
 
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.motorcontrol.MotorController;
+import edu.wpi.first.wpilibj.motorcontrol.Talon;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Shooter extends SubsystemBase {
 
     private final TalonFX shooterMotor = new TalonFX(55, "*");
+    private final TalonFX shooterMotorTheSecond = new TalonFX(43, "*");//.setControl(new Follower(shooterMotor.getDeviceID(), true));
     private final VelocityVoltage velocityRequest = new VelocityVoltage(0);
-
     private static final String LIMELIGHT_NAME = "limelight-shooter";
 
     private static final double LIMELIGHT_HEIGHT = 0.80;
@@ -178,6 +184,7 @@ public class Shooter extends SubsystemBase {
 
     private double targetRPM = 0;
 
+
     public Shooter() {
 
         Slot0Configs slot0 = new Slot0Configs();
@@ -187,7 +194,10 @@ public class Shooter extends SubsystemBase {
         slot0.kV = 0.12;
 
         shooterMotor.getConfigurator().apply(slot0);
-
+        shooterMotorTheSecond.setControl(new Follower(shooterMotor.getDeviceID(),MotorAlignmentValue.Opposed));
+        shooterMotorTheSecond.getConfigurator().apply(slot0);
+        
+        
         distanceToRPM.put(1.0, -750.0);
         distanceToRPM.put(2.5, -1700.0);
         // distanceToRPM.put(2.0, -2000.0);
@@ -208,6 +218,9 @@ public class Shooter extends SubsystemBase {
 
         shooterMotor.setControl(
             velocityRequest.withVelocity(targetRPM / 60.0)
+        );
+        shooterMotorTheSecond.setControl(
+            velocityRequest.withVelocity(-targetRPM / 60.0)
         );
     }
 
@@ -231,6 +244,7 @@ public class Shooter extends SubsystemBase {
 
     public void stopShooter() {
         shooterMotor.stopMotor();
+        shooterMotorTheSecond.stopMotor();
     }
 
     public double getTargetRPM() {
