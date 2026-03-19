@@ -198,11 +198,18 @@ public class Shooter extends SubsystemBase {
         shooterMotorTheSecond.setControl(new Follower(shooterMotor.getDeviceID(),MotorAlignmentValue.Opposed));//MotorAlignmentValue.Opposed
         shooterMotorTheSecond.getConfigurator().apply(slot0);
         
+        // //3/19/2026 - original code
+        // distanceToRPM.put(1.8, -1800.0);
+        // distanceToRPM.put(2.6, -3950.0);
+        // // distanceToRPM.put(2.0, -2000.0);
+        // distanceToRPM.put(3.4, -5500.0);
+
         
-        distanceToRPM.put(1.8, -1800.0);
-        distanceToRPM.put(2.6, -3950.0);
+        //3/19/2026
+        distanceToRPM.put(1.8, -1700.0);
+        distanceToRPM.put(2.6, -3800.0);
         // distanceToRPM.put(2.0, -2000.0);
-        distanceToRPM.put(3.4, -5500.0);
+        distanceToRPM.put(3.4, -5300.0);
     }
 
     public void runShooterWithLimelight() {

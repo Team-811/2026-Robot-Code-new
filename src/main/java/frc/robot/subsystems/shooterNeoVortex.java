@@ -37,11 +37,11 @@ public class shooterNeoVortex extends SubsystemBase {
     }
     public void close(){
         // setBoth(SPEED_CLOSE);
-        topNeo.set(0.25);
+        topNeo.set(0.2);
        bottonNeo.set(0.1);
     }
     public void close2(){
-     topNeo.set(0.25);
+     topNeo.set(0.2);
      bottonNeo.set(0.10);
     }
 
