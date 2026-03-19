@@ -2,6 +2,7 @@ package frc.robot.commands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Indexer;
@@ -14,7 +15,7 @@ public class goToMidAuto extends SequentialCommandGroup{
     public goToMidAuto(CommandSwerveDrivetrain drivetrain,shooterNeoVortex shooterN,Shooter shooterK, intakeForNow intake,Indexer indexer,Intake intakeSpin,LimelightShooter limelight){
         
     addCommands(new lowerIntake(intake).withTimeout(5),new ParallelCommandGroup(
-        new PathPlannerAuto("goToMidAuto"), new IntakeSpin(intakeSpin)), new shooterLime(shooterK).withTimeout(2),
-        new ParallelCommandGroup( new shooterLime(shooterK).withTimeout(5)), new closeNeo2(shooterN), new IndexSpin(indexer));
+        new PathPlannerAuto("goToMidAuto"), new IntakeSpin(intakeSpin).withTimeout(2)), new FaceAprilTag(drivetrain, limelight).withTimeout(1), new shooterLime(shooterK).withTimeout(2),
+        new ParallelDeadlineGroup( new shooterLime(shooterK).withTimeout(5)), new closeNeo2(shooterN), new IndexSpin(indexer));
     }
 }

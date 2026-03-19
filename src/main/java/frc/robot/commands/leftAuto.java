@@ -19,8 +19,8 @@ public class leftAuto extends SequentialCommandGroup {
     public leftAuto(CommandSwerveDrivetrain drivetrain,shooterNeoVortex shooterN,Shooter shooterK, intakeForNow intake,Indexer indexer,Intake intakeSpin,LimelightShooter limelight){
     addCommands(new lowerIntake(intake).withTimeout(5),
         new PathPlannerAuto("leftAuto"),
-        new FaceAprilTag(drivetrain, limelight).withTimeout(2), new WaitCommand(1),
-        new ParallelDeadlineGroup( new IndexSpin(indexer).withTimeout(5), new shooterLime(shooterK), new closeNeo2(shooterN))
+        new FaceAprilTag(drivetrain, limelight).withTimeout(1), new WaitCommand(1),
+        new ParallelDeadlineGroup( new IndexSpin(indexer).withTimeout(5), new shooterLime(shooterK), new closeShooter(shooterN))
         );
     }
 }

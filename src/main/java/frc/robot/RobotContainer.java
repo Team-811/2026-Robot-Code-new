@@ -32,11 +32,14 @@ import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.FaceAprilTag;
 import frc.robot.commands.shooterCommand;
 import frc.robot.commands.shooterLime;
+import frc.robot.commands.StartAtHubAuto;
 import frc.robot.commands.IndexSpin;
 import frc.robot.commands.IntakeSpin;
 import frc.robot.commands.closeNeo2;
 import frc.robot.commands.closeShooter;
+import frc.robot.commands.fromRightBumpAuto;
 import frc.robot.commands.goToMidAuto;
+import frc.robot.commands.justShootAuto;
 import frc.robot.commands.leftAuto;
 import frc.robot.commands.leftDriveAuto;
 import frc.robot.commands.lowerIntake;
@@ -118,8 +121,11 @@ public class RobotContainer {
     // Expose autos on SmartDashboard as simple string keys (mapped to commands later).
     autoChooser = new SendableChooser<String>();
     autoChooser.addOption("leftAuto", "leftAuto");
-    autoChooser.addOption("leftDriveAuto", "leftDriveAuto");
+    autoChooser.addOption("leftDriveAuto", "leftDriveAuto");// don't work most of the time
         autoChooser.addOption("goToMidAuto", "goToMidAuto");
+        autoChooser.addOption("fromRightBumpAuto", "fromRightBumpAuto");
+         autoChooser.addOption("StartAtHubAuto", "StartAtHubAuto"); // maybe don't use this one
+         autoChooser.addOption("justShootAuto", "justShootAuto");
     SmartDashboard.putData("autoChooser",autoChooser);
 
   }
@@ -146,10 +152,10 @@ public class RobotContainer {
         double y = slewLimY.calculate(-MathUtil.applyDeadband(m_driverController.getLeftX(), DEADBAND));
         double rot = slewLimRote.calculate(-MathUtil.applyDeadband(m_driverController.getRightX(), DEADBAND));
 
-        return new SwerveRequest.RobotCentric()
+        return new SwerveRequest.FieldCentric()
             .withDriveRequestType(DriveRequestType.Velocity)
-            .withVelocityX(x * MaxSpeed * 0.3)
-            .withVelocityY(y * MaxSpeed * 0.3)
+            .withVelocityX(x * MaxSpeed * 0.7)
+            .withVelocityY(y * MaxSpeed * 0.7)
             .withRotationalRate(rot * MaxAngularRate * 0.2);
     })
 );
@@ -228,10 +234,19 @@ public class RobotContainer {
         auto= new leftAuto(drivetrain, shooterN, shooter, intakeArm, indexer, intake, limeShooter);
         break;
       case "leftDriveAuto":
-        auto = new leftDriveAuto(drivetrain, shooterN, shooter, limeShooter, indexer);
+        auto = new leftDriveAuto(drivetrain, shooterN, shooter, limeShooter, indexer, intakeArm);
         break;
         case "goToMidAuto":
         auto = new goToMidAuto(drivetrain, shooterN, shooter, intakeArm, indexer, intake, limeShooter);
+        break;
+         case "fromRightBumpAuto":
+        auto = new fromRightBumpAuto(drivetrain, shooterN, shooter, limeShooter, indexer, intakeArm);
+        break;
+         case "StartAtHubAuto":
+        auto = new StartAtHubAuto(drivetrain, shooterN, shooter, limeShooter, indexer);
+        break;
+         case "justShootAuto":
+        auto = new justShootAuto(drivetrain, shooterN, shooter, limeShooter, indexer, intakeArm);
         break;
     case "justMove":
       default: 

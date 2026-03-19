@@ -11,10 +11,12 @@ import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.intakeForNow;
 import frc.robot.subsystems.Indexer;
 import frc.robot.subsystems.shooterNeoVortex;
+public class fromRightBumpAuto extends SequentialCommandGroup{
 
-public class leftDriveAuto extends SequentialCommandGroup{
-     public leftDriveAuto(CommandSwerveDrivetrain drivetrain,shooterNeoVortex shooterN,Shooter shooterK, LimelightShooter limelight,Indexer indexer, intakeForNow in){
-        addCommands(new PathPlannerAuto("moveBackAuto"),  new FaceAprilTag(drivetrain, limelight).withTimeout(1),new WaitCommand(1),
+     public fromRightBumpAuto(CommandSwerveDrivetrain drivetrain,shooterNeoVortex shooterN,Shooter shooterK, LimelightShooter limelight,Indexer indexer, intakeForNow in){
+        addCommands(new PathPlannerAuto("fromRightBumpAuto"),  new FaceAprilTag(drivetrain, limelight).withTimeout(1),new WaitCommand(1),
         new ParallelCommandGroup(new closeShooter(shooterN), new shooterLime(shooterK), new IndexSpin(indexer), new lowerIntake(in)));
      }
+
+
 }

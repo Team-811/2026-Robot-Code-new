@@ -179,6 +179,7 @@ public class Shooter extends SubsystemBase {
     private final NetworkTable limelightTable =
         NetworkTableInstance.getDefault().getTable(LIMELIGHT_NAME);
 
+
     private final InterpolatingDoubleTreeMap distanceToRPM =
         new InterpolatingDoubleTreeMap();
 
@@ -194,14 +195,14 @@ public class Shooter extends SubsystemBase {
         slot0.kV = 0.12;
 
         shooterMotor.getConfigurator().apply(slot0);
-        shooterMotorTheSecond.setControl(new Follower(shooterMotor.getDeviceID(),MotorAlignmentValue.Opposed));
+        shooterMotorTheSecond.setControl(new Follower(shooterMotor.getDeviceID(),MotorAlignmentValue.Opposed));//MotorAlignmentValue.Opposed
         shooterMotorTheSecond.getConfigurator().apply(slot0);
         
         
-        distanceToRPM.put(1.0, -750.0);
-        distanceToRPM.put(2.5, -1700.0);
+        distanceToRPM.put(1.8, -1800.0);
+        distanceToRPM.put(2.6, -3950.0);
         // distanceToRPM.put(2.0, -2000.0);
-        distanceToRPM.put(3.0, -2650.0);
+        distanceToRPM.put(3.4, -5500.0);
     }
 
     public void runShooterWithLimelight() {
@@ -219,9 +220,9 @@ public class Shooter extends SubsystemBase {
         shooterMotor.setControl(
             velocityRequest.withVelocity(targetRPM / 60.0)
         );
-        shooterMotorTheSecond.setControl(
-            velocityRequest.withVelocity(-targetRPM / 60.0)
-        );
+        // shooterMotorTheSecond.setControl(
+        //     velocityRequest.withVelocity(-targetRPM / 60.0)
+        // );
     }
 
     private double getDistanceMeters() {
@@ -257,6 +258,6 @@ public void periodic() {
         .getEntry("tv")
         .getDouble(0);
 
-    System.out.println("Limelight tv: " + tv);
+    // System.out.println("Limelight tv: " + tv);
 }
 }

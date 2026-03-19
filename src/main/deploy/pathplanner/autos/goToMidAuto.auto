@@ -15,6 +15,24 @@
           "data": {
             "pathName": "go2"
           }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "comeback1"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "comeback2"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "moveback2"
+          }
         }
       ]
     }

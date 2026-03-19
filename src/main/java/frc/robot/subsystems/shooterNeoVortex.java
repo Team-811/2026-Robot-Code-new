@@ -18,7 +18,7 @@ public class shooterNeoVortex extends SubsystemBase {
     private static final double SPEED_INTAKE = 0.2;
     private static final double SPEED_CLOSE  = 0.3;
     private static final double SPEED_FULL   = 0.5;
-    private static final double SPEED_CLEAR  = -0.2; // reverse both wheels to clear
+    private static final double SPEED_CLEAR  = -0.3; // reverse both wheels to clear
 
     SparkFlex topNeo;
     SparkFlex bottonNeo;
@@ -32,13 +32,17 @@ public class shooterNeoVortex extends SubsystemBase {
     }
  
     public void ssssssswirly_whirly(){
-        setBoth(SPEED_INTAKE);
+        topNeo.set(0.3);
+        bottonNeo.set(0.2); //0.2
     }
     public void close(){
-        setBoth(SPEED_CLOSE);
+        // setBoth(SPEED_CLOSE);
+        topNeo.set(0.25);
+       bottonNeo.set(0.1);
     }
     public void close2(){
-        setBoth(SPEED_FULL);
+     topNeo.set(0.25);
+     bottonNeo.set(0.10);
     }
 
     public void ssssssswirly_whirly_stop(){
