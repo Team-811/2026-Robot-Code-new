@@ -14,6 +14,7 @@ import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -104,6 +105,7 @@ public class RobotContainer {
   private final SlewRateLimiter slewLimX = new SlewRateLimiter(3);
   private final SlewRateLimiter slewLimRote = new SlewRateLimiter(6);
   private boolean fieldRelative = true;
+  private Rotation2d fieldRelativeReference = Rotation2d.kZero;
   private final PIDController headingHoldController = new PIDController(5.0, 0.0, 0.2);
   private Rotation2d headingHoldTarget = Rotation2d.kZero;
   private boolean headingHoldActive = false;
@@ -135,6 +137,7 @@ public class RobotContainer {
   public RobotContainer() {
     // Give field-centric drive an initial forward reference as soon as the code boots.
     drivetrain.seedFieldCentric();
+    fieldRelativeReference = drivetrain.getState().Pose.getRotation();
     headingHoldController.enableContinuousInput(-Math.PI, Math.PI);
     headingHoldController.setTolerance(Math.toRadians(1.5));
     resetHeadingHoldTarget();
@@ -174,7 +177,8 @@ public class RobotContainer {
         Commands.runOnce(() -> {
           fieldRelative = !fieldRelative;
           SmartDashboard.putBoolean("Drive/FieldRelative", fieldRelative);
-        }, drivetrain).ignoringDisable(true));
+          SmartDashboard.putString("Drive/DriveMode", fieldRelative ? "field" : "robot");
+        }).ignoringDisable(true));
 
     // Speed modes now split translation and rotation scaling to improve precision driving.
     m_driverController.leftBumper().onTrue(
@@ -182,24 +186,21 @@ public class RobotContainer {
             () -> setSpeedMode(
                 OperatorConstants.slowDriveSpeed,
                 OperatorConstants.slowTurnSpeed,
-                "slow"),
-            drivetrain)
+                "slow"))
             .ignoringDisable(true));
     m_driverController.rightBumper().onTrue(
         Commands.runOnce(
             () -> setSpeedMode(
                 OperatorConstants.fastDriveSpeed,
                 OperatorConstants.fastTurnSpeed,
-                "fast"),
-            drivetrain)
+                "fast"))
             .ignoringDisable(true));
     m_driverController.x().onTrue(
         Commands.runOnce(
             () -> setSpeedMode(
                 OperatorConstants.normalDriveSpeed,
                 OperatorConstants.normalTurnSpeed,
-                "normal"),
-            drivetrain)
+                "normal"))
             .ignoringDisable(true));
 
     // While disabled, explicitly idle the swerve request so motors are not being driven by stale commands.
@@ -245,6 +246,9 @@ public class RobotContainer {
     SmartDashboard.putNumber("Drive/MaxSpeedMps", MaxSpeed);
     SmartDashboard.putNumber("Drive/MaxAngularRateRadPerSec", MaxAngularRate);
     SmartDashboard.putBoolean("Drive/FieldRelative", fieldRelative);
+    SmartDashboard.putString("Drive/DriveMode", fieldRelative ? "field" : "robot");
+    SmartDashboard.putNumber("Drive/FieldReferenceDeg", fieldRelativeReference.getDegrees());
+    SmartDashboard.putNumber("Drive/DriverRelativeHeadingDeg", 0.0);
     SmartDashboard.putString("Drive/SpeedMode", speedModeLabel);
     SmartDashboard.putNumber("Drive/TranslationScale", driveSpeedScalar);
     SmartDashboard.putNumber("Drive/RotationScale", rotationSpeedScalar);
@@ -294,10 +298,14 @@ public class RobotContainer {
    * <p>This method is the single source of truth for driver motion. It applies translation and
    * rotation scaling, handles field-relative vs. robot-relative mode, and engages heading hold when
    * the driver lets go of the rotation stick.
+   *
+   * <p>The code intentionally performs the field-relative conversion itself and always sends the
+   * drivetrain a robot-relative velocity request. That keeps the "field vs. robot" behavior under
+   * one explicit heading reference that Start/Back can reseed and that we can publish for debugging.
    */
   private SwerveRequest buildDriveRequest(double xInput, double yInput, double rotInput) {
-    double vx = xInput * MaxSpeed * driveSpeedScalar;
-    double vy = yInput * MaxSpeed * driveSpeedScalar;
+    double commandedX = xInput * MaxSpeed * driveSpeedScalar;
+    double commandedY = yInput * MaxSpeed * driveSpeedScalar;
     double maxOmega = MaxAngularRate * rotationSpeedScalar;
     double omega = rotInput * maxOmega;
     Rotation2d currentHeading = drivetrain.getState().Pose.getRotation();
@@ -321,21 +329,30 @@ public class RobotContainer {
       }
     }
 
+    Rotation2d driverRelativeHeading = currentHeading.minus(fieldRelativeReference);
+    if (fieldRelative) {
+      ChassisSpeeds robotRelativeSpeeds =
+          ChassisSpeeds.fromFieldRelativeSpeeds(
+              commandedX,
+              commandedY,
+              omega,
+              driverRelativeHeading);
+      commandedX = robotRelativeSpeeds.vxMetersPerSecond;
+      commandedY = robotRelativeSpeeds.vyMetersPerSecond;
+    }
+
+    SmartDashboard.putBoolean("Drive/FieldRelative", fieldRelative);
+    SmartDashboard.putString("Drive/DriveMode", fieldRelative ? "field" : "robot");
+    SmartDashboard.putNumber("Drive/FieldReferenceDeg", fieldRelativeReference.getDegrees());
+    SmartDashboard.putNumber("Drive/DriverRelativeHeadingDeg", driverRelativeHeading.getDegrees());
     SmartDashboard.putBoolean("Drive/HeadingHoldActive", headingHoldActive);
     SmartDashboard.putNumber("Drive/HeadingHoldTargetDeg", headingHoldTarget.getDegrees());
     SmartDashboard.putNumber("Drive/HeadingDeg", currentHeading.getDegrees());
 
-    if (fieldRelative) {
-      return new SwerveRequest.FieldCentric()
-          .withDriveRequestType(DriveRequestType.Velocity)
-          .withVelocityX(vx)
-          .withVelocityY(vy)
-          .withRotationalRate(omega);
-    }
     return new SwerveRequest.RobotCentric()
         .withDriveRequestType(DriveRequestType.Velocity)
-        .withVelocityX(vx)
-        .withVelocityY(vy)
+        .withVelocityX(commandedX)
+        .withVelocityY(commandedY)
         .withRotationalRate(omega);
   }
 
@@ -352,6 +369,8 @@ public class RobotContainer {
   /** Reset the drivetrain's field-centric reference and restart heading-hold from the new current heading. */
   private void reseedFieldCentric() {
     drivetrain.seedFieldCentric();
+    fieldRelativeReference = drivetrain.getState().Pose.getRotation();
+    SmartDashboard.putNumber("Drive/FieldReferenceDeg", fieldRelativeReference.getDegrees());
     resetHeadingHoldTarget();
   }
 
