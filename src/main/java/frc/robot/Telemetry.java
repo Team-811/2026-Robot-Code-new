@@ -34,6 +34,9 @@ import edu.wpi.first.wpilibj.util.Color8Bit;
  * </ul>
  */
 public class Telemetry {
+    // Phoenix SignalLogger writes binary log files on the robot. Leave this off unless you specifically
+    // need CTRE log capture and have enough free storage available.
+    private static final boolean ENABLE_PHOENIX_SIGNAL_LOGGER = false;
     private final double MaxSpeed;
 
     /**
@@ -43,7 +46,9 @@ public class Telemetry {
      */
     public Telemetry(double maxSpeed) {
         MaxSpeed = maxSpeed;
-        SignalLogger.start();
+        if (ENABLE_PHOENIX_SIGNAL_LOGGER) {
+            SignalLogger.start();
+        }
 
         /* Set up the module state Mechanism2d telemetry */
         for (int i = 0; i < 4; ++i) {
@@ -123,13 +128,15 @@ public class Telemetry {
         SmartDashboard.putNumber("Drive/SpeedMps", Math.hypot(state.Speeds.vxMetersPerSecond, state.Speeds.vyMetersPerSecond));
         SmartDashboard.putNumber("Drive/OdometryHz", 1.0 / state.OdometryPeriod);
 
-        /* Also write to log file */
-        SignalLogger.writeStruct("DriveState/Pose", Pose2d.struct, state.Pose);
-        SignalLogger.writeStruct("DriveState/Speeds", ChassisSpeeds.struct, state.Speeds);
-        SignalLogger.writeStructArray("DriveState/ModuleStates", SwerveModuleState.struct, state.ModuleStates);
-        SignalLogger.writeStructArray("DriveState/ModuleTargets", SwerveModuleState.struct, state.ModuleTargets);
-        SignalLogger.writeStructArray("DriveState/ModulePositions", SwerveModulePosition.struct, state.ModulePositions);
-        SignalLogger.writeDouble("DriveState/OdometryPeriod", state.OdometryPeriod, "seconds");
+        /* Also write to log file when CTRE logging is enabled */
+        if (ENABLE_PHOENIX_SIGNAL_LOGGER) {
+            SignalLogger.writeStruct("DriveState/Pose", Pose2d.struct, state.Pose);
+            SignalLogger.writeStruct("DriveState/Speeds", ChassisSpeeds.struct, state.Speeds);
+            SignalLogger.writeStructArray("DriveState/ModuleStates", SwerveModuleState.struct, state.ModuleStates);
+            SignalLogger.writeStructArray("DriveState/ModuleTargets", SwerveModuleState.struct, state.ModuleTargets);
+            SignalLogger.writeStructArray("DriveState/ModulePositions", SwerveModulePosition.struct, state.ModulePositions);
+            SignalLogger.writeDouble("DriveState/OdometryPeriod", state.OdometryPeriod, "seconds");
+        }
 
         /* Telemeterize the pose to a Field2d */
         fieldTypePub.set("Field2d");
