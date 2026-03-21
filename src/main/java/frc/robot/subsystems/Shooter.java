@@ -68,9 +68,14 @@ public class Shooter extends SubsystemBase {
     shooterMotorTheSecond.getConfigurator().apply(slot0);
 
     // Shooter calibration points recorded on 3/19/2026.
-    distanceToRPM.put(1.8, -1700.0);
-    distanceToRPM.put(2.6, -3800.0);
-    distanceToRPM.put(3.4, -5300.0);
+    //distanceToRPM.put(1.8, -1275.0);
+    //distanceToRPM.put(2.6, -3700.0);
+    //distanceToRPM.put(3.4, -4750.0);
+    distanceToRPM.put(0.8, -1200.0);
+    distanceToRPM.put(1.8, -2000.0);
+    distanceToRPM.put(2.6, -3000.0);
+    distanceToRPM.put(3.4, -4000.0);
+    distanceToRPM.put(5.0,-4900.0);
   }
 
   /**
