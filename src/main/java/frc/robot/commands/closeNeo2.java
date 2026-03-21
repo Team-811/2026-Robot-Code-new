@@ -4,7 +4,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.shooterNeoVortex;
 
 /**
- * Hold-style command for the second close-range NEO shooter preset.
+ * Hold-style command for the second close-range NEO shooter RPM preset.
  *
  * <p>The subsystem exposes both {@code close()} and {@code close2()} so the team can compare two
  * nearby shot presets without rewriting the subsystem each time.

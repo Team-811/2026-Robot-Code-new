@@ -6,7 +6,9 @@ import frc.robot.subsystems.shooterNeoVortex;
 /**
  * Hold-style reverse command for the NEO shooter.
  *
- * <p>This is primarily a recovery/jam-clearing command rather than a scoring command.
+ * <p>This now asks the Spark Flex controllers for a negative RPM setpoint instead of a raw percent
+ * output, which keeps the Vortex shooter consistent with the rest of the project's velocity-based
+ * shooter control.
  */
 public class reverseShooter extends Command {
   private final shooterNeoVortex shooter;

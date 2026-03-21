@@ -102,7 +102,7 @@ public class RobotContainer {
 
   // Two shooter implementations are present:
   // - Shooter: TalonFX velocity loop with Limelight distance-based RPM lookup.
-  // - shooterNeoVortex: SparkFlex open-loop preset outputs.
+  // - shooterNeoVortex: SparkFlex velocity presets expressed directly in RPM.
   private final Shooter shooter = new Shooter();
   private final shooterNeoVortex shooterN = new shooterNeoVortex();
   private final Elevator elevator = new Elevator();
@@ -206,7 +206,7 @@ public class RobotContainer {
     c.rightBumper().whileTrue(new lowerIntake(intakeArm));
 
     // Shooter control choices:
-    // - LT/X/Y = open-loop NEO shooter presets
+    // - LT/X/Y = RPM-based NEO shooter presets
     // - RT     = Limelight/Talon closed-loop shooter
     // - Start  = reverse the NEO shooter to clear jams
     c.leftTrigger().whileTrue(new shooterCommand(shooterN));

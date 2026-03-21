@@ -4,7 +4,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.shooterNeoVortex;
 
 /**
- * Hold-style command for one close-range NEO shooter preset.
+ * Hold-style command for one close-range NEO shooter RPM preset.
  *
  * <p>This command continuously applies the {@link shooterNeoVortex#close()} preset until the button
  * is released or another command interrupts it.

@@ -4,7 +4,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.shooterNeoVortex;
 
 /**
- * Hold-style command for the main open-loop NEO shooter preset.
+ * Hold-style command for the main NEO shooter RPM preset.
  *
  * <p>Because this command never ends by itself, it is meant to be bound with {@code whileTrue(...)}
  * so releasing the button stops the shooter.
