@@ -1,270 +1,152 @@
-// package frc.robot.subsystems;
-
-// import com.ctre.phoenix6.CANBus;
-// import com.ctre.phoenix6.configs.MotorOutputConfigs;
-// import com.ctre.phoenix6.configs.Slot0Configs;
-// import com.ctre.phoenix6.configs.TalonFXConfiguration;
-// import com.ctre.phoenix6.configs.VoltageConfigs;
-// import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
-// import com.ctre.phoenix6.configs.ClosedLoopRampsConfigs;
-// import com.ctre.phoenix6.controls.VelocityVoltage;
-// import com.ctre.phoenix6.hardware.TalonFX;
-// import com.ctre.phoenix6.signals.InvertedValue;
-// import com.ctre.phoenix6.signals.NeutralModeValue;
-
-// import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
-// import edu.wpi.first.networktables.NetworkTable;
-// import edu.wpi.first.networktables.NetworkTableInstance;
-// import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-// import edu.wpi.first.wpilibj2.command.SubsystemBase;
-// import frc.robot.LimelightHelpers;
-
-// /**
-//  * Falcon-based shooter that maps Limelight distance estimates to RPM setpoints.
-//  * Designed for novice readability: every config is explicit so behavior is stable across reboots.
-//  * - Uses CTRE velocity closed-loop (with feedforward) instead of percent output so ball speed holds as battery sags.
-//  * - Distance->RPM map is clamped and stops the motor if no valid lookup exists to avoid mystery shots.
-//  * - Telemetry publishes target/actual RPM and ready flag to SmartDashboard so drivers know when to feed.
-//  */
-// public class Shooter extends SubsystemBase {
-
-//     // Hardware wiring/config (change here if IDs/bus change)
-//     private static final String CAN_BUS = "CANivore"; // Bus name: "CANivore" if plugged into CANivore, "rio" if on roboRIO CAN
-//     private static final int SHOOTER_ID = 55;         // TalonFX CAN ID for the shooter motor
-
-//     // Motor protection/consistency (tune as needed)
-//     private static final double SUPPLY_LIMIT_AMPS = 50.0; // Typical 40-60A to prevent brownouts; raise if shots lag, lower if browning out
-//     private static final double STATOR_LIMIT_AMPS = 80.0; // Torque limit; 60-100A is common for shooters
-//     private static final double CLOSED_LOOP_RAMP_S = 0.1; // Seconds to ramp velocity setpoint; increase for smoother spin-up
-//     private static final double VOLTAGE_COMP_SAT = 12.0;  // Voltage compensation target; keep at battery nominal (10-12V)
-
-//     private static final CANBus SHOOTER_CANBUS = new CANBus(CAN_BUS);
-//     private final TalonFX shooterMotor = new TalonFX(SHOOTER_ID, SHOOTER_CANBUS);
-//     private final VelocityVoltage velocityRequest = new VelocityVoltage(0);
-
-//     private static final String LIMELIGHT_NAME = "limelight-shooter"; // NetworkTables name for the aiming camera
-
-//     // How close the motor velocity must be to the target to consider "ready" (rad/s). Lower = stricter, higher = more forgiving.
-//     private static final double VELOCITY_TOLERANCE_RPS = 1.5;
-
-//     private final NetworkTable limelightTable =
-//         NetworkTableInstance.getDefault().getTable(LIMELIGHT_NAME);
-
-//     private final InterpolatingDoubleTreeMap distanceToRPM =
-//         new InterpolatingDoubleTreeMap();
-
-//     private double targetRPM = 0;
-
-//     public Shooter() {
-
-//         // Velocity closed-loop gains. Run SysId to replace these with measured kS/kV/kA and tuned kP.
-//         Slot0Configs slot0 = new Slot0Configs();
-//         slot0.kP = 0.12;//1
-//         slot0.kI = 0;//2
-//         slot0.kD = 0;
-//         slot0.kA = 0;//0.4
-//         slot0.kV = 0.12;//0.12
-
-//         TalonFXConfiguration cfg = new TalonFXConfiguration()
-//             .withSlot0(slot0)
-//             .withMotorOutput(new MotorOutputConfigs()
-//                 .withNeutralMode(NeutralModeValue.Coast)
-//                 .withInverted(InvertedValue.CounterClockwise_Positive)) // keep RPM table positive; flip if wiring requires
-//             .withCurrentLimits(new CurrentLimitsConfigs()
-//                 .withSupplyCurrentLimit(SUPPLY_LIMIT_AMPS)
-//                 .withSupplyCurrentLimitEnable(true)
-//                 .withStatorCurrentLimit(STATOR_LIMIT_AMPS)
-//                 .withStatorCurrentLimitEnable(true))
-//             .withVoltage(new VoltageConfigs().withPeakForwardVoltage(VOLTAGE_COMP_SAT).withPeakReverseVoltage(-VOLTAGE_COMP_SAT))
-//             .withClosedLoopRamps(new ClosedLoopRampsConfigs().withVoltageClosedLoopRampPeriod(CLOSED_LOOP_RAMP_S));
-
-//         shooterMotor.getConfigurator().apply(cfg);
-
-//         // Distance (m) -> shooter RPM. Add more points as you calibrate; values should be positive (inversion set above).
-//         distanceToRPM.put(1.0, -750.0);
-//         distanceToRPM.put(2.5, -1700.0);
-//         distanceToRPM.put(3.5, -2650.0);
-//     }
-
-//     public void runShooterWithLimelight() {
-//         boolean hasTarget = limelightTable.getEntry("tv").getDouble(0) == 1;
-//         if (!hasTarget) {
-//             // No valid target: stop to avoid firing at unknown speed
-//             targetRPM = 0;
-//             stopShooter();
-//             return;
-//         }
-
-//         double distance = getDistanceMeters();
-//         Double rpm = distanceToRPM.get(distance);
-//         if (rpm == null) {
-//             stopShooter();
-//             return;
-//         }
-
-//         targetRPM = rpm;
-
-//         // Command the TalonFX in velocity mode using RPM->RPS conversion; keeps closed-loop on the motor controller.
-//         shooterMotor.setControl(
-//             velocityRequest.withVelocity(targetRPM / 60.0)
-//         );
-//     }
-
-//     private double getDistanceMeters() {
-//         boolean hasTarget = limelightTable.getEntry("tv").getDouble(0) == 1;
-//         if (!hasTarget) {
-//             return -1.0;
-//         }
-
-//         // Use camera-space pose for direct range to the observed AprilTag; this updates every frame.
-//         var pose = LimelightHelpers.getTargetPose3d_CameraSpace(LIMELIGHT_NAME);
-//         if (pose == null) {
-//             return -1.0;
-//         }
-//         // Distance from camera to the observed AprilTag (meters, 3D norm).
-//         return pose.getTranslation().getNorm();
-//     }
-
-//     public boolean isAtSpeed() {
-//         double currentRPS = shooterMotor.getVelocity().getValueAsDouble();
-//         double targetRPS = targetRPM / 60.0;
-
-//         return Math.abs(currentRPS - targetRPS) < VELOCITY_TOLERANCE_RPS;
-//     }
-
-//     public void stopShooter() {
-//         shooterMotor.stopMotor();
-//     }
-//     @Override
-// public void periodic() {
-//         double currentRPS = shooterMotor.getVelocity().getValueAsDouble();
-//         SmartDashboard.putNumber("Shooter/TargetRPM", targetRPM);
-//         SmartDashboard.putNumber("Shooter/VelocityRPM", currentRPS * 60.0);
-//         SmartDashboard.putBoolean("Shooter/AtSpeed", isAtSpeed());
-//         SmartDashboard.putNumber("Shooter/DistanceMeters", getDistanceMeters());
-//     }
-// }
 package frc.robot.subsystems;
 
-import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
-import com.ctre.phoenix.motorcontrol.IFollower;
 
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.motorcontrol.MotorController;
-import edu.wpi.first.wpilibj.motorcontrol.Talon;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+/**
+ * Limelight-assisted TalonFX shooter.
+ *
+ * <p>This is the more "automatic" of the two shooter implementations in the project. Its job is to:
+ * <ol>
+ *   <li>read target information from the {@code limelight-shooter} NetworkTables entries</li>
+ *   <li>estimate shot distance from the camera mounting geometry and Limelight {@code ty}</li>
+ *   <li>look up an RPM from an interpolation table</li>
+ *   <li>command the primary TalonFX in velocity closed-loop mode</li>
+ *   <li>run the second TalonFX as an opposed-direction follower</li>
+ * </ol>
+ *
+ * <p>This gives the team a way to ask for "shoot based on what the camera sees" instead of relying
+ * only on fixed open-loop presets.
+ */
 public class Shooter extends SubsystemBase {
 
-    private final TalonFX shooterMotor = new TalonFX(55, "*");
-    private final TalonFX shooterMotorTheSecond = new TalonFX(43, "*");//.setControl(new Follower(shooterMotor.getDeviceID(), true));
-    private final VelocityVoltage velocityRequest = new VelocityVoltage(0);
-    private static final String LIMELIGHT_NAME = "limelight-shooter";
+  private final TalonFX shooterMotor = new TalonFX(55, "*");
+  private final TalonFX shooterMotorTheSecond = new TalonFX(43, "*");
+  private final VelocityVoltage velocityRequest = new VelocityVoltage(0);
+  private static final String LIMELIGHT_NAME = "limelight-shooter";
 
-    private static final double LIMELIGHT_HEIGHT = 0.80;
-    private static final double TARGET_HEIGHT = 2.10;
-    private static final double LIMELIGHT_ANGLE = Units.degreesToRadians(25);
+  // Limelight mounting geometry used for the simple trig-based distance estimate.
+  private static final double LIMELIGHT_HEIGHT = 0.80;
+  private static final double TARGET_HEIGHT = 2.10;
+  private static final double LIMELIGHT_ANGLE = Units.degreesToRadians(25);
 
-    private static final double VELOCITY_TOLERANCE_RPS = 1.5;
-    private static final double speed = 1800;
+  private static final double VELOCITY_TOLERANCE_RPS = 1.5;
+  private static final double speed = 1800;
 
-    private final NetworkTable limelightTable =
-        NetworkTableInstance.getDefault().getTable(LIMELIGHT_NAME);
+  private final NetworkTable limelightTable =
+      NetworkTableInstance.getDefault().getTable(LIMELIGHT_NAME);
 
+  // Distance (meters) -> shooter wheel RPM calibration points.
+  // InterpolatingDoubleTreeMap lets us ask for intermediate distances without manually adding every value.
+  private final InterpolatingDoubleTreeMap distanceToRPM =
+      new InterpolatingDoubleTreeMap();
 
-    private final InterpolatingDoubleTreeMap distanceToRPM =
-        new InterpolatingDoubleTreeMap();
+  private double targetRPM = 0;
 
-    private double targetRPM = 0;
+  public Shooter() {
+    // Slot 0 is Phoenix's primary closed-loop gain slot for velocity control.
+    Slot0Configs slot0 = new Slot0Configs();
+    slot0.kP = 0.12;
+    slot0.kI = 0;
+    slot0.kD = 0;
+    slot0.kV = 0.12;
 
+    shooterMotor.getConfigurator().apply(slot0);
 
-    public Shooter() {
+    // The second shooter motor mirrors the primary in the opposite direction so the wheels spin against each other.
+    shooterMotorTheSecond.setControl(
+        new Follower(shooterMotor.getDeviceID(), MotorAlignmentValue.Opposed));
+    shooterMotorTheSecond.getConfigurator().apply(slot0);
 
-        Slot0Configs slot0 = new Slot0Configs();
-        slot0.kP = 0.12;
-        slot0.kI = 0;
-        slot0.kD = 0;
-        slot0.kV = 0.12;
+    // Shooter calibration points recorded on 3/19/2026.
+    distanceToRPM.put(1.8, -1700.0);
+    distanceToRPM.put(2.6, -3800.0);
+    distanceToRPM.put(3.4, -5300.0);
+  }
 
-        shooterMotor.getConfigurator().apply(slot0);
-        shooterMotorTheSecond.setControl(new Follower(shooterMotor.getDeviceID(),MotorAlignmentValue.Opposed));//MotorAlignmentValue.Opposed
-        shooterMotorTheSecond.getConfigurator().apply(slot0);
-        
-        // //3/19/2026 - original code
-        // distanceToRPM.put(1.8, -1800.0);
-        // distanceToRPM.put(2.6, -3950.0);
-        // // distanceToRPM.put(2.0, -2000.0);
-        // distanceToRPM.put(3.4, -5500.0);
-
-        
-        //3/19/2026
-        distanceToRPM.put(1.8, -1700.0);
-        distanceToRPM.put(2.6, -3800.0);
-        // distanceToRPM.put(2.0, -2000.0);
-        distanceToRPM.put(3.4, -5300.0);
+  /**
+   * Estimate distance from the Limelight and command the shooter to the corresponding wheel speed.
+   *
+   * <p>This method is designed to be called repeatedly while a command is held, not just once.
+   * Re-running it lets the subsystem continuously update the requested RPM as the robot moves.
+   */
+  public void runShooterWithLimelight() {
+    double distance = getDistanceMeters();
+    if (distance < 0) {
+      stopShooter();
+      return;
     }
 
-    public void runShooterWithLimelight() {
-        double distance = getDistanceMeters();
-        if (distance < 0) {
-            stopShooter();
-            return;
-        }
-
-        Double rpm = distanceToRPM.get(distance);
-        if (rpm == null) return;
-
-        targetRPM = rpm;
-
-        shooterMotor.setControl(
-            velocityRequest.withVelocity(targetRPM / 60.0)
-        );
-        // shooterMotorTheSecond.setControl(
-        //     velocityRequest.withVelocity(-targetRPM / 60.0)
-        // );
+    Double rpm = distanceToRPM.get(distance);
+    if (rpm == null) {
+      return;
     }
 
-    private double getDistanceMeters() {
-        boolean hasTarget = limelightTable.getEntry("tv").getDouble(0) == 1;
-        if (!hasTarget) 
-            targetRPM = speed;
+    targetRPM = rpm;
 
-        double ty = limelightTable.getEntry("ty").getDouble(0);
+    shooterMotor.setControl(
+        velocityRequest.withVelocity(targetRPM / 60.0)
+    );
+  }
 
-        return (TARGET_HEIGHT - LIMELIGHT_HEIGHT) /
-            Math.tan(LIMELIGHT_ANGLE + Units.degreesToRadians(ty));
+  /**
+   * Estimate distance to the target using Limelight vertical angle.
+   *
+   * <p>The math is the standard mounting-height trigonometry used in many FRC shooters:
+   * {@code distance = heightDifference / tan(cameraAngle + ty)}.
+   *
+   * <p>Important detail: when {@code tv == 0}, this method does not return an invalid distance.
+   * Instead it sets {@code targetRPM} to the fallback {@code speed} value and still evaluates the
+   * distance formula using the current {@code ty} entry. That is the current behavior of the code as written.
+   */
+  private double getDistanceMeters() {
+    boolean hasTarget = limelightTable.getEntry("tv").getDouble(0) == 1;
+    if (!hasTarget) {
+      targetRPM = speed;
     }
 
-    public boolean isAtSpeed() {
-        double currentRPS = shooterMotor.getVelocity().getValueAsDouble();
-        double targetRPS = targetRPM / 60.0;
+    double ty = limelightTable.getEntry("ty").getDouble(0);
 
-        return Math.abs(currentRPS - targetRPS) < VELOCITY_TOLERANCE_RPS;
-    }
+    return (TARGET_HEIGHT - LIMELIGHT_HEIGHT) /
+        Math.tan(LIMELIGHT_ANGLE + Units.degreesToRadians(ty));
+  }
 
-    public void stopShooter() {
-        shooterMotor.stopMotor();
-        shooterMotorTheSecond.stopMotor();
-    }
+  /** True when the measured wheel speed is close enough to the requested speed to count as "ready." */
+  public boolean isAtSpeed() {
+    double currentRPS = shooterMotor.getVelocity().getValueAsDouble();
+    double targetRPS = targetRPM / 60.0;
 
-    public double getTargetRPM() {
-        return targetRPM;
-    }
-    @Override
-public void periodic() {
+    return Math.abs(currentRPS - targetRPS) < VELOCITY_TOLERANCE_RPS;
+  }
+
+  /** Stop both shooter motors immediately. */
+  public void stopShooter() {
+    shooterMotor.stopMotor();
+    shooterMotorTheSecond.stopMotor();
+  }
+
+  /** Return the last RPM value this subsystem asked the shooter to hold. */
+  public double getTargetRPM() {
+    return targetRPM;
+  }
+
+  @Override
+  public void periodic() {
+    // Placeholder for future shooter telemetry. The code currently reads tv but does not publish it yet.
     double tv = NetworkTableInstance.getDefault()
         .getTable("limelight-shooter")
         .getEntry("tv")
         .getDouble(0);
 
     // System.out.println("Limelight tv: " + tv);
-}
+  }
 }

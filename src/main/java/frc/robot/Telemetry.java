@@ -20,6 +20,19 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 
+/**
+ * Publishes drivetrain state to several places at once.
+ *
+ * <p>The generated CTRE swerve template exposes a {@link SwerveDriveState} snapshot containing pose,
+ * chassis speeds, module angles, module targets, and odometry timing. This helper turns that one
+ * snapshot into a few different views that are useful during development:
+ * <ul>
+ *   <li>structured NetworkTables topics for dashboards and logging tools</li>
+ *   <li>a {@code Field2d}-style pose feed so you can visualize where odometry thinks the robot is</li>
+ *   <li>four small {@link Mechanism2d} widgets that show module direction and relative wheel speed</li>
+ *   <li>CTRE SignalLogger entries for post-match analysis</li>
+ * </ul>
+ */
 public class Telemetry {
     private final double MaxSpeed;
 
@@ -84,7 +97,12 @@ public class Telemetry {
 
     private final double[] m_poseArray = new double[3];
 
-    /** Accept the swerve drive state and telemeterize it to SmartDashboard and SignalLogger. */
+    /**
+     * Publish one fresh drivetrain state snapshot.
+     *
+     * <p>This is registered as a callback from the drivetrain, so it runs whenever the drivetrain
+     * has a new state available.
+     */
     public void telemeterize(SwerveDriveState state) {
         /* Telemeterize the swerve drive state */
         drivePose.set(state.Pose);

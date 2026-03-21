@@ -1,23 +1,41 @@
 package frc.robot.subsystems;
 
-import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.SparkMax;
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
+/**
+ * Intake roller subsystem.
+ *
+ * <p>This motor is responsible for pulling the game piece into the robot. The code currently drives
+ * it open-loop at nearly full output, which is common for an intake roller when no sensor-based
+ * control is needed.
+ */
 public class Intake extends SubsystemBase {
-   private SparkMax IntakeMotor;
-    public Intake(){
-        IntakeMotor = new SparkMax(16, MotorType.kBrushless);
-    }
-    public void spin(){
-        IntakeMotor.set(0.999999);//This is the line Tobias Packard fucked with type shi, origonaly 0.8
-    }
-    public void dontspin(){
-        IntakeMotor.set(0);
-    }
-          @Override
+  private final SparkMax intakeMotor;
+
+  public Intake() {
+    intakeMotor = new SparkMax(16, MotorType.kBrushless);
+  }
+
+  /**
+   * Run the intake inward at nearly full power.
+   *
+   * <p>The output is intentionally close to 1.0, meaning the motor is commanded to almost full
+   * applied output whenever the intake command is held.
+   */
+  public void spin() {
+    intakeMotor.set(0.999999);
+  }
+
+  /** Stop the intake roller. */
+  public void dontspin() {
+    intakeMotor.set(0);
+  }
+
+  @Override
   public void periodic() {
-    // This method will be called once per scheduler run
+    // No sensors are currently attached, so this subsystem has no periodic telemetry/update work.
   }
 }

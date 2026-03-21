@@ -4,19 +4,14 @@
 
 package frc.robot;
 
-/*
- * File Overview: Launches the robot program entry point.
- * Features/Details:
- * - Delegates startup to WPILib's RobotBase.startRobot with Robot::new.
- * - Intentionally minimal; no static state or initialization to keep boot stable.
- * - Only update if you rename the main Robot class.
- */
 import edu.wpi.first.wpilibj.RobotBase;
 
 /**
- * Do NOT add any static variables to this class, or any initialization at all. Unless you know what
- * you are doing, do not modify this file except to change the parameter class to the startRobot
- * call.
+ * JVM entry point for the robot program.
+ *
+ * <p>This file should stay almost empty. WPILib handles robot startup by calling
+ * {@link RobotBase#startRobot}, which then constructs {@link Robot} and begins the normal lifecycle.
+ * Students usually do not need to edit this file unless the main robot class is renamed.
  */
 public final class Main {
   private Main() {}

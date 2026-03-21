@@ -4,17 +4,19 @@
 
 package frc.robot;
 
-/*
- * File Overview: Defines all robot-wide constants used across subsystems/commands.
- * Features/Details:
- * - OperatorConstants: controller ports, joystick deadbands, drivetrain speed presets.
- * - Hardware IDs: CAN IDs and PCM channels for motors/solenoids used elsewhere.
- * - Tunables: shared slip current limit and elevator deadband.
- * Keep this file logic-free so values can be imported safely from anywhere.
- */
 /**
- * Central place for robot-wide constants. Keep this free of behavior/logic so these values can be
- * referenced from anywhere without side effects.
+ * Central place for robot-wide constants.
+ *
+ * <p>The main rule for a constants file is that it should stay free of robot behavior. Subsystems
+ * and commands can safely import values from here because reading a constant should never create
+ * hardware objects, talk to the network, or change state.
+ *
+ * <p>In this project the nested classes are grouped by purpose:
+ * <ul>
+ *   <li>{@link OperatorConstants}: controller ports and driver tuning values</li>
+ *   <li>{@link CANdleConstants}: LED-related hardware mapping</li>
+ *   <li>{@link ClimberConstants}: IDs, open-loop speeds, and timed-step lengths for the climber</li>
+ * </ul>
  */
 public final class Constants {
   private Constants() {}
@@ -22,26 +24,26 @@ public final class Constants {
   public static final class OperatorConstants {
     private OperatorConstants() {}
 
-    // Controller ports (USB order in DriverStation)
+    // USB controller ports as shown in the Driver Station.
     public static final int kDriverControllerPort  = 0;  // Primary/drive
     public static final int kOpControllerPort      = 1;  // Operator/secondary
 
-    // Shared deadzone for stick axes; 0.05-0.15 is common. Keep small to retain fine aiming control.
+    // Shared joystick deadzones. These remove small stick drift while still allowing fine control.
     public static final double kDefaultControllerDeadzone = 0.1;
     public static final double kJoyRightXDeadzone = kDefaultControllerDeadzone; // Rotation
     public static final double kJoyLeftXDeadzone  = kDefaultControllerDeadzone; // Strafe
     public static final double kJoyLeftYDeadzone  = kDefaultControllerDeadzone; // Forward/back
                
-    // DRIVETRAIN speed scaler (0-1). Tune down for rookies or tight fields.
+    // Global drivetrain cap applied on top of any selected speed mode.
+    // Lower this when the team is learning to drive or when testing in tight spaces.
     public static final double drivetrainSpeedCap = 0.5; 
 
-    // Driver speed scaling presets (multiplied into MaxSpeed/MaxAngularRate).
-    // Use 0.8-1.0 for full field, 0.3-0.6 for controlled scoring lanes.
+    // Driver speed mode presets. These are intended to be multiplied by the drivetrain max speed/rate.
     public static final double fastSpeed     = 1.0; // Full power
     public static final double slowSpeed     = 0.2; // Crawl/precision
     public static final double normalSpeed   = 0.7; // Everyday practice speed
 
-    // Hardware IDs and limits
+    // Miscellaneous hardware IDs and shared limits used by older subsystems.
     public static final double kSlipCurrent  = 120; // Amps where wheels likely slip; typical FRC range 80-150 A
     public static final int neoId            = 18;  // CAN ID for NEO motor controller
     public static final int elKrakenId       = 23;  // CAN ID for elevator Kraken motor

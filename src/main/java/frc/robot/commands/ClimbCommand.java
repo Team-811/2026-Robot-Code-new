@@ -6,15 +6,14 @@ import frc.robot.Constants.ClimberConstants;
 import frc.robot.subsystems.Elevator;
 
 /**
- * Climb sequence:
- * 1) Close hook
- * 2) Lift up
- * 3) Open hook for next rung
- * 4) Close hook on next rung
- * 5) Lift again
- * Uses timed steps for simplicity (no sensors/limits). Tune durations in ClimberConstants for your rig.
- * Rationale: without encoders/limit switches on the lift/hook, timed open-loop steps are the safest
- * quick solution. Keep speeds conservative and test on a practice robot before competition use.
+ * Timed climb macro.
+ *
+ * <p>This command uses {@link SequentialCommandGroup} so the climb reads like a checklist:
+ * close hook, lift, reposition hook, then lift again.
+ *
+ * <p>Because the climber subsystem does not currently use sensors or position control, every stage is
+ * open-loop and time-based. That makes the sequence easy to read and easy to tune, but it also means
+ * the constants in {@link frc.robot.Constants.ClimberConstants} matter a lot.
  */
 public class ClimbCommand extends SequentialCommandGroup {
     public ClimbCommand(Elevator elevator) {

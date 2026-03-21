@@ -12,13 +12,15 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 /**
- * Usage: Bind to a button (e.g., driver B). Hold to rotate in place until the Limelight tx is ~0; releasing ends it.
- * Requirements: LimelightShooter subsystem must be scheduled so its static getters are fresh; drivetrain must be a CTRE swerve.
- * Behavior:
- * - Zeroes X/Y velocity; only commands rotation.
- * - Stops immediately when no target (tv == 0) to avoid spinning on stale data.
- * - PID on tx (deg) with deadband, tolerance, clamp, and slew to keep rotation smooth.
- * - Finishes after ON_TARGET_CYCLES_REQUIRED consecutive cycles within tolerance.
+ * Driver-assist command that rotates the robot to face an AprilTag.
+ *
+ * <p>This command is meant to be bound with {@code whileTrue(...)} on a driver button. While held,
+ * it temporarily takes control of the drivetrain, commands zero translation, and uses a PID loop on
+ * Limelight {@code tx} to rotate toward the center of the tag. Releasing the button hands full
+ * control back to the driver's normal drive command.
+ *
+ * <p>Only the tags listed in {@link #TARGET_TAG_IDS} are considered while the command is active.
+ * That filter is pushed into the Limelight at initialize time and cleared in {@link #end(boolean)}.
  */
 public class FaceAprilTag extends Command {
 

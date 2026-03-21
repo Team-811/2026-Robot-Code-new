@@ -6,8 +6,10 @@ import frc.robot.Constants.ClimberConstants;
 import frc.robot.subsystems.Elevator;
 
 /**
- * Simple descent: open hook, lower lift for a fixed time, then stop.
- * Rationale: still open-loop/timed due to lack of sensors; keep speeds/durations conservative to avoid drops.
+ * Timed descent macro.
+ *
+ * <p>This is the opposite of the climb macro: open the hook, lower the lift for a fixed duration,
+ * then stop everything. It uses the same open-loop, time-based philosophy as {@link ClimbCommand}.
  */
 public class DescendCommand extends SequentialCommandGroup {
     public DescendCommand(Elevator elevator) {

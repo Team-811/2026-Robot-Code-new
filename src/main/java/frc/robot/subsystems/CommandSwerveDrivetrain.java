@@ -32,8 +32,20 @@ import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathPlannerPath;
 
 /**
- * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
- * Subsystem so it can easily be used in command-based projects.
+ * CTRE Phoenix 6 swerve drivetrain wrapped as a WPILib subsystem.
+ *
+ * <p>This class is mostly infrastructure rather than game-specific robot logic. Its job is to bridge
+ * a few systems together:
+ * <ul>
+ *   <li>CTRE's generated swerve drivetrain and hardware abstraction</li>
+ *   <li>WPILib's command-based subsystem/command model</li>
+ *   <li>PathPlanner's AutoBuilder and path-following commands</li>
+ *   <li>simulation support when running off-robot</li>
+ * </ul>
+ *
+ * <p>If you are new to the codebase, think of this class as "the drivetrain service layer." Higher
+ * level files such as {@code RobotContainer} or autonomous commands ask it to apply requests,
+ * follow paths, or reset pose, while this class handles the library-specific details.
  */
 public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Subsystem {
     private static final double kSimLoopPeriod = 0.005; // 5 ms
@@ -186,11 +198,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     @Override
     public void periodic() {
         /*
-         * Periodically try to apply the operator perspective.
-         * If we haven't applied the operator perspective before, then we should apply it regardless of DS state.
-         * This allows us to correct the perspective in case the robot code restarts mid-match.
-         * Otherwise, only check and apply the operator perspective if the DS is disabled.
-         * This ensures driving behavior doesn't change until an explicit disable event occurs during testing.
+         * PathPlanner and operator driving both rely on a consistent definition of "forward."
+         * CTRE lets us set an operator perspective so joystick-forward matches the alliance's forward
+         * direction. We apply that perspective once as soon as we know the alliance color, and after
+         * that only refresh it while disabled so the robot cannot suddenly flip driver controls mid-match.
          */
         if (!m_hasAppliedOperatorPerspective || DriverStation.isDisabled()) {
             DriverStation.getAlliance().ifPresent(allianceColor -> {
@@ -207,18 +218,25 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private void startSimThread() {
         m_lastSimTime = Utils.getCurrentTimeSeconds();
 
-        /* Run simulation at a faster rate so PID gains behave more reasonably */
+        /* Run the sim loop faster than the normal 20 ms robot loop so closed-loop control feels more realistic. */
         m_simNotifier = new Notifier(() -> {
             final double currentTime = Utils.getCurrentTimeSeconds();
             double deltaTime = currentTime - m_lastSimTime;
             m_lastSimTime = currentTime;
 
-            /* use the measured time delta, get battery voltage from WPILib */
+            /* Feed the measured dt and current battery voltage back into the Phoenix simulator. */
             updateSimState(deltaTime, RobotController.getBatteryVoltage());
         });
         m_simNotifier.startPeriodic(kSimLoopPeriod);
     }
 
+    /**
+     * Configure PathPlanner's global AutoBuilder for this drivetrain.
+     *
+     * <p>AutoBuilder is PathPlanner's high-level hook for autonomous routines. Once configured, a
+     * path or auto can ask for the robot pose, reset odometry, and send chassis speed requests
+     * without every command having to re-declare that wiring.
+     */
     private void configureAutoBuilder() {
         try {
             RobotConfig config = RobotConfig.fromGUISettings();
@@ -247,6 +265,13 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             DriverStation.reportError("Failed to load PathPlanner config and configure AutoBuilder", ex.getStackTrace());
         }
     }
+
+    /**
+     * Load and follow a single named PathPlanner path file.
+     *
+     * <p>This is lower-level than {@link com.pathplanner.lib.commands.PathPlannerAuto}; it is useful
+     * when you want to follow one path inside a larger custom command sequence.
+     */
     public Command followPathCommand(String pathName) {
     
         try{
