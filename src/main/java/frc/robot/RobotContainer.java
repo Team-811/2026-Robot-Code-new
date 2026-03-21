@@ -11,6 +11,9 @@ import com.pathplanner.lib.commands.PathPlannerAuto;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -67,18 +70,19 @@ import frc.robot.subsystems.shooterNeoVortex;
  *       climb macros.</li>
  * </ul>
  *
- * <p>Important accuracy note: this class still stores a {@code fieldRelative} flag and
- * {@code speedModeScalar}, and the helper method {@link #buildDriveRequest(double, double, double)}
- * uses them correctly. However, the currently active default drive command below directly creates a
- * {@link SwerveRequest.FieldCentric} request with fixed scaling, so the Y/LB/RB/X buttons currently
- * update dashboard state more than robot behavior. That is useful to know when reading the code.
+ * <p>Driver-control behavior is intentionally centralized in
+ * {@link #buildDriveRequest(double, double, double)} so field-relative mode, speed modes, and
+ * joystick shaping all flow through one path.
  */
 public class RobotContainer {
   // Phoenix Tuner X measures the drivetrain's free speed; we use that as the base scale for joystick commands.
   private final double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
-  // 2.5 rotations/second base angular rate. The active default command later scales this by 0.2.
+  // 2.5 rotations/second base angular rate before driver-mode scaling is applied.
   private final double MaxAngularRate = RotationsPerSecond.of(2.5).in(RadiansPerSecond);
-  private double speedModeScalar = OperatorConstants.normalSpeed;
+  private double driveSpeedScalar =
+      OperatorConstants.normalDriveSpeed * OperatorConstants.drivetrainSpeedCap;
+  private double rotationSpeedScalar =
+      OperatorConstants.normalTurnSpeed * OperatorConstants.drivetrainSpeedCap;
   private String speedModeLabel = "normal";
 
   // Game piece path through the robot: intake roller -> indexer -> shooter.
@@ -92,13 +96,17 @@ public class RobotContainer {
   // Generated CTRE drivetrain wrapper. It owns the swerve modules, odometry, and PathPlanner hooks.
   public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 
-  /** Deadband applied before slew limiting so tiny stick drift does not move the robot. */
-  private static final double DEADBAND = 0.08;
+  private static final double TRANSLATION_DEADBAND = 0.06;
+  private static final double ROTATION_DEADBAND = 0.08;
+  private static final double HEADING_HOLD_ROTATION_THRESHOLD = 0.02;
   // Slew limiters smooth sudden joystick changes so the robot feels less twitchy and breaks traction less often.
   private final SlewRateLimiter slewLimY = new SlewRateLimiter(3);
   private final SlewRateLimiter slewLimX = new SlewRateLimiter(3);
   private final SlewRateLimiter slewLimRote = new SlewRateLimiter(6);
   private boolean fieldRelative = true;
+  private final PIDController headingHoldController = new PIDController(5.0, 0.0, 0.2);
+  private Rotation2d headingHoldTarget = Rotation2d.kZero;
+  private boolean headingHoldActive = false;
 
   // Two shooter implementations are present:
   // - Shooter: TalonFX velocity loop with Limelight distance-based RPM lookup.
@@ -127,6 +135,9 @@ public class RobotContainer {
   public RobotContainer() {
     // Give field-centric drive an initial forward reference as soon as the code boots.
     drivetrain.seedFieldCentric();
+    headingHoldController.enableContinuousInput(-Math.PI, Math.PI);
+    headingHoldController.setTolerance(Math.toRadians(1.5));
+    resetHeadingHoldTarget();
     configureBindings();
     publishStaticTelemetry();
 
@@ -150,39 +161,45 @@ public class RobotContainer {
   private void configureBindings() {
     drivetrain.setDefaultCommand(
         drivetrain.applyRequest(() -> {
-          double x = slewLimX.calculate(
-              -MathUtil.applyDeadband(m_driverController.getLeftY(), DEADBAND));
-          double y = slewLimY.calculate(
-              -MathUtil.applyDeadband(m_driverController.getLeftX(), DEADBAND));
-          double rot = slewLimRote.calculate(
-              -MathUtil.applyDeadband(m_driverController.getRightX(), DEADBAND));
+          Translation2d translationCommand = getDriverTranslationCommand();
+          double rot = getDriverRotationCommand();
 
-          // This is the actual live drive request today: always field-centric with fixed scaling.
-          return new SwerveRequest.FieldCentric()
-              .withDriveRequestType(DriveRequestType.Velocity)
-              .withVelocityX(x * MaxSpeed * 0.7)
-              .withVelocityY(y * MaxSpeed * 0.7)
-              .withRotationalRate(rot * MaxAngularRate * 0.2);
+          // Route all normal driver motion through the shared helper so speed modes and
+          // field-relative toggling actually change robot behavior.
+          return buildDriveRequest(translationCommand.getX(), translationCommand.getY(), rot);
         }));
 
-    // Toggle the remembered field-relative state and dashboard indicator.
-    // The helper method below honors this flag, but the current live default command above does not.
+    // Toggle between field-relative and robot-relative drive.
     m_driverController.y().onTrue(
         Commands.runOnce(() -> {
           fieldRelative = !fieldRelative;
           SmartDashboard.putBoolean("Drive/FieldRelative", fieldRelative);
         }, drivetrain).ignoringDisable(true));
 
-    // These buttons update the stored speed mode and dashboard label.
-    // They are useful state for the helper method, but the active default command currently uses fixed output scales.
+    // Speed modes now split translation and rotation scaling to improve precision driving.
     m_driverController.leftBumper().onTrue(
-        Commands.runOnce(() -> setSpeedMode(OperatorConstants.slowSpeed, "slow"), drivetrain)
+        Commands.runOnce(
+            () -> setSpeedMode(
+                OperatorConstants.slowDriveSpeed,
+                OperatorConstants.slowTurnSpeed,
+                "slow"),
+            drivetrain)
             .ignoringDisable(true));
     m_driverController.rightBumper().onTrue(
-        Commands.runOnce(() -> setSpeedMode(OperatorConstants.fastSpeed, "fast"), drivetrain)
+        Commands.runOnce(
+            () -> setSpeedMode(
+                OperatorConstants.fastDriveSpeed,
+                OperatorConstants.fastTurnSpeed,
+                "fast"),
+            drivetrain)
             .ignoringDisable(true));
     m_driverController.x().onTrue(
-        Commands.runOnce(() -> setSpeedMode(OperatorConstants.normalSpeed, "normal"), drivetrain)
+        Commands.runOnce(
+            () -> setSpeedMode(
+                OperatorConstants.normalDriveSpeed,
+                OperatorConstants.normalTurnSpeed,
+                "normal"),
+            drivetrain)
             .ignoringDisable(true));
 
     // While disabled, explicitly idle the swerve request so motors are not being driven by stale commands.
@@ -194,8 +211,8 @@ public class RobotContainer {
     m_driverController.b().whileTrue(new FaceAprilTag(drivetrain, limeShooter));
 
     // These two buttons both reseed the field-centric heading so drivers can quickly recover if the heading is off.
-    m_driverController.start().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
-    m_driverController.back().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
+    m_driverController.start().onTrue(drivetrain.runOnce(this::reseedFieldCentric));
+    m_driverController.back().onTrue(drivetrain.runOnce(this::reseedFieldCentric));
 
     // Operator controls for game piece intake and transfer.
     c.b().whileTrue(new IntakeSpin(intake));
@@ -229,6 +246,10 @@ public class RobotContainer {
     SmartDashboard.putNumber("Drive/MaxAngularRateRadPerSec", MaxAngularRate);
     SmartDashboard.putBoolean("Drive/FieldRelative", fieldRelative);
     SmartDashboard.putString("Drive/SpeedMode", speedModeLabel);
+    SmartDashboard.putNumber("Drive/TranslationScale", driveSpeedScalar);
+    SmartDashboard.putNumber("Drive/RotationScale", rotationSpeedScalar);
+    SmartDashboard.putBoolean("Drive/HeadingHoldActive", headingHoldActive);
+    SmartDashboard.putNumber("Drive/HeadingHoldTargetDeg", headingHoldTarget.getDegrees());
   }
 
   /**
@@ -270,15 +291,39 @@ public class RobotContainer {
   /**
    * Helper for building either field-centric or robot-centric drive requests.
    *
-   * <p>This method reflects the intended design for the drive controls: all joystick scaling and
-   * the field/robot-centric choice live in one place. Right now the active default command above
-   * bypasses this helper, but it is still useful to read because it shows how the control state is
-   * meant to be applied.
+   * <p>This method is the single source of truth for driver motion. It applies translation and
+   * rotation scaling, handles field-relative vs. robot-relative mode, and engages heading hold when
+   * the driver lets go of the rotation stick.
    */
   private SwerveRequest buildDriveRequest(double xInput, double yInput, double rotInput) {
-    double vx = xInput * MaxSpeed * speedModeScalar;
-    double vy = yInput * MaxSpeed * speedModeScalar;
-    double omega = rotInput * MaxAngularRate * speedModeScalar;
+    double vx = xInput * MaxSpeed * driveSpeedScalar;
+    double vy = yInput * MaxSpeed * driveSpeedScalar;
+    double maxOmega = MaxAngularRate * rotationSpeedScalar;
+    double omega = rotInput * maxOmega;
+    Rotation2d currentHeading = drivetrain.getState().Pose.getRotation();
+
+    if (Math.abs(rotInput) > HEADING_HOLD_ROTATION_THRESHOLD) {
+      headingHoldActive = false;
+    } else {
+      if (!headingHoldActive) {
+        headingHoldTarget = currentHeading;
+        headingHoldController.reset();
+        headingHoldActive = true;
+      }
+
+      omega = MathUtil.clamp(
+          headingHoldController.calculate(currentHeading.getRadians(), headingHoldTarget.getRadians()),
+          -maxOmega,
+          maxOmega);
+
+      if (headingHoldController.atSetpoint()) {
+        omega = 0.0;
+      }
+    }
+
+    SmartDashboard.putBoolean("Drive/HeadingHoldActive", headingHoldActive);
+    SmartDashboard.putNumber("Drive/HeadingHoldTargetDeg", headingHoldTarget.getDegrees());
+    SmartDashboard.putNumber("Drive/HeadingDeg", currentHeading.getDegrees());
 
     if (fieldRelative) {
       return new SwerveRequest.FieldCentric()
@@ -295,9 +340,63 @@ public class RobotContainer {
   }
 
   /** Remember the selected speed mode and mirror the choice to SmartDashboard. */
-  private void setSpeedMode(double scalar, String label) {
-    speedModeScalar = scalar * OperatorConstants.drivetrainSpeedCap;
+  private void setSpeedMode(double driveScalar, double rotationScalar, String label) {
+    driveSpeedScalar = driveScalar * OperatorConstants.drivetrainSpeedCap;
+    rotationSpeedScalar = rotationScalar * OperatorConstants.drivetrainSpeedCap;
     speedModeLabel = label;
     SmartDashboard.putString("Drive/SpeedMode", speedModeLabel);
+    SmartDashboard.putNumber("Drive/TranslationScale", driveSpeedScalar);
+    SmartDashboard.putNumber("Drive/RotationScale", rotationSpeedScalar);
+  }
+
+  /** Reset the drivetrain's field-centric reference and restart heading-hold from the new current heading. */
+  private void reseedFieldCentric() {
+    drivetrain.seedFieldCentric();
+    resetHeadingHoldTarget();
+  }
+
+  /** Capture the robot's current heading as the next heading-hold target. */
+  private void resetHeadingHoldTarget() {
+    headingHoldTarget = drivetrain.getState().Pose.getRotation();
+    headingHoldController.reset();
+    headingHoldActive = false;
+    SmartDashboard.putBoolean("Drive/HeadingHoldActive", headingHoldActive);
+    SmartDashboard.putNumber("Drive/HeadingHoldTargetDeg", headingHoldTarget.getDegrees());
+  }
+
+  /**
+   * Read the driver's translation stick with a circular deadband and squared response curve.
+   *
+   * <p>This preserves the direction of diagonal inputs while making the first part of stick travel
+   * less twitchy for fine alignment.
+   */
+  private Translation2d getDriverTranslationCommand() {
+    double rawX = -m_driverController.getLeftY();
+    double rawY = -m_driverController.getLeftX();
+    double magnitude = Math.hypot(rawX, rawY);
+
+    double xCommand = 0.0;
+    double yCommand = 0.0;
+
+    if (magnitude > 1e-6) {
+      double deadbandedMagnitude =
+          MathUtil.applyDeadband(Math.min(1.0, magnitude), TRANSLATION_DEADBAND);
+      double shapedMagnitude = deadbandedMagnitude * deadbandedMagnitude;
+      xCommand = (rawX / magnitude) * shapedMagnitude;
+      yCommand = (rawY / magnitude) * shapedMagnitude;
+    }
+
+    return new Translation2d(
+        slewLimX.calculate(xCommand),
+        slewLimY.calculate(yCommand));
+  }
+
+  /** Read the driver's rotation stick with a deadband and squared response curve. */
+  private double getDriverRotationCommand() {
+    double deadbandedRotation =
+        MathUtil.applyDeadband(-m_driverController.getRightX(), ROTATION_DEADBAND);
+    double shapedRotation =
+        Math.copySign(deadbandedRotation * deadbandedRotation, deadbandedRotation);
+    return slewLimRote.calculate(shapedRotation);
   }
 }

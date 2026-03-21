@@ -34,14 +34,19 @@ public final class Constants {
     public static final double kJoyLeftXDeadzone  = kDefaultControllerDeadzone; // Strafe
     public static final double kJoyLeftYDeadzone  = kDefaultControllerDeadzone; // Forward/back
                
-    // Global drivetrain cap applied on top of any selected speed mode.
-    // Lower this when the team is learning to drive or when testing in tight spaces.
-    public static final double drivetrainSpeedCap = 0.5; 
+    // Global drivetrain cap applied on top of the selected speed mode.
+    // Set to 1.0 so the speed-mode values below map directly to on-robot feel during tuning.
+    public static final double drivetrainSpeedCap = 1.0;
 
-    // Driver speed mode presets. These are intended to be multiplied by the drivetrain max speed/rate.
-    public static final double fastSpeed     = 1.0; // Full power
-    public static final double slowSpeed     = 0.2; // Crawl/precision
-    public static final double normalSpeed   = 0.7; // Everyday practice speed
+    // Driver speed mode presets.
+    // Translation and rotation are split because drivers often want fine approach speed while still
+    // keeping enough turn authority to line up quickly.
+    public static final double fastDriveSpeed   = 0.90;
+    public static final double fastTurnSpeed    = 1.00;
+    public static final double slowDriveSpeed   = 0.35;
+    public static final double slowTurnSpeed    = 0.55;
+    public static final double normalDriveSpeed = 0.65;
+    public static final double normalTurnSpeed  = 0.75;
 
     // Miscellaneous hardware IDs and shared limits used by older subsystems.
     public static final double kSlipCurrent  = 120; // Amps where wheels likely slip; typical FRC range 80-150 A
