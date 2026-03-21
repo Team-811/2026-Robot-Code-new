@@ -7,7 +7,7 @@ import frc.robot.subsystems.intakeForNow;
  * Hold-style command that raises the intake arm.
  *
  * <p>The subsystem method name is {@code spinTheOtherWay()} because the motor is currently controlled
- * as a simple bi-directional output rather than a named position loop.
+ * as a simple bi-directional open-loop output rather than a named position loop.
  */
 public class raiseIntake extends Command {
   private final intakeForNow in;

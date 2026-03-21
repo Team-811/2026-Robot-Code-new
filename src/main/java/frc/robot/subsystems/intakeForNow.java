@@ -1,14 +1,15 @@
 package frc.robot.subsystems;
 
-import com.revrobotics.spark.FeedbackSensor;
-import com.revrobotics.spark.SparkBase.ResetMode;
-import com.revrobotics.spark.SparkClosedLoopController;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.config.SparkMaxConfig;
-import com.revrobotics.PersistMode;
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.DutyCycleOut;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.OperatorConstants;
 
 /**
  * Intake arm / pivot motor subsystem.
@@ -17,48 +18,62 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
  * {@link frc.robot.commands.raiseIntake} and {@link frc.robot.commands.lowerIntake} command this
  * motor to move the intake assembly up and down.
  *
- * <p>Right now the subsystem is open-loop:
+ * <p>This subsystem now uses a Kraken X60 controlled by a Phoenix 6 {@link TalonFX} on CAN ID 56.
+ * The public API stays the same so the rest of the codebase does not need to care whether the arm is
+ * powered by a REV or CTRE controller.
+ *
+ * <p>Control is still intentionally simple and open-loop:
  * <ul>
- *   <li>{@link #spin()} drives one direction</li>
+ *   <li>{@link #spin()} drives one direction at a fixed duty cycle</li>
  *   <li>{@link #spinTheOtherWay()} drives the opposite direction</li>
  *   <li>{@link #dontSpin()} stops the motor</li>
  * </ul>
  *
- * <p>A {@link SparkMaxConfig} and closed-loop controller object are created as a starting point for
- * future position control, but the config is not currently applied and no encoder setpoint logic is
- * active yet.
+ * <p>If the arm moves the wrong way after wiring changes, flip the signs of the two output constants
+ * below or add inversion in the TalonFX configuration.
  */
 public class intakeForNow extends SubsystemBase {
-  private final SparkMax intake;
-  private final SparkMaxConfig motorConfig;
-  private SparkClosedLoopController closedLoopController;
+  private static final double LOWER_OUTPUT = 0.35;
+  private static final double RAISE_OUTPUT = -0.35;
+
+  private final TalonFX intakeArmMotor;
+  private final DutyCycleOut dutyRequest = new DutyCycleOut(0.0);
 
   public intakeForNow() {
-    intake = new SparkMax(20, MotorType.kBrushless);
-    motorConfig = new SparkMaxConfig();
+    // Use the native roboRIO CAN bus for this Kraken since it is not on a CANivore.
+    intakeArmMotor = new TalonFX(OperatorConstants.cArmId);
 
-    // Prepare the config for future closed-loop work, even though this robot currently drives the arm open-loop.
-    motorConfig.closedLoop.feedbackSensor(FeedbackSensor.kPrimaryEncoder).p(0);
+    TalonFXConfiguration config = new TalonFXConfiguration()
+        .withMotorOutput(new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Brake))
+        .withCurrentLimits(new CurrentLimitsConfigs()
+            .withSupplyCurrentLimit(40)
+            .withSupplyCurrentLimitEnable(true)
+            .withStatorCurrentLimit(80)
+            .withStatorCurrentLimitEnable(true));
 
-    // If/when closed-loop arm control is added, this line can be re-enabled to push the config to the controller.
-    // intake.configure(motorConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
+    intakeArmMotor.getConfigurator().apply(config);
+    dontSpin();
   }
 
   /** Drive the intake arm in the "lower" direction used by {@code lowerIntake}. */
   public void spin() {
-    intake.set(1);
+    intakeArmMotor.setControl(dutyRequest.withOutput(LOWER_OUTPUT));
   }
 
   /** Drive the intake arm in the opposite direction used by {@code raiseIntake}. */
   public void spinTheOtherWay() {
-    intake.set(-1.0);
+    intakeArmMotor.setControl(dutyRequest.withOutput(RAISE_OUTPUT));
   }
 
   /** Stop the intake arm motor. */
   public void dontSpin() {
-    intake.set(0);
+    intakeArmMotor.stopMotor();
   }
 
   @Override
-  public void periodic() {}
+  public void periodic() {
+    SmartDashboard.putNumber("IntakeArm/PositionRot", intakeArmMotor.getPosition().getValueAsDouble());
+    SmartDashboard.putNumber("IntakeArm/VelocityRps", intakeArmMotor.getVelocity().getValueAsDouble());
+    SmartDashboard.putNumber("IntakeArm/StatorCurrentA", intakeArmMotor.getStatorCurrent().getValueAsDouble());
+  }
 }

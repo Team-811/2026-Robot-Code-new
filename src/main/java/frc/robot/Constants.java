@@ -53,7 +53,7 @@ public final class Constants {
     public static final int rDoubSolCT       = 7;   // PCM channel for rear double solenoid reverse
     public static final int fDoubSolA        = 0;   // PCM module address for front double solenoid
     public static final int rDoubSolA        = 1;   // PCM module address for rear double solenoid
-    public static final int cArmId           = 24;  // CAN ID for arm motor controller
+    public static final int cArmId           = 56;  // CAN ID for intake arm Kraken X60 / TalonFX controller on the roboRIO CAN bus
     public static final int climbId          = 30;  // CAN ID for climber motor controller
     public static final double kElDeadBand   = 3;   // Elevator deadband to ignore small commands
 
