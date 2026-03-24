@@ -79,7 +79,7 @@ public class RobotContainer {
   // Phoenix Tuner X measures the drivetrain's free speed; we use that as the base scale for joystick commands.
   private final double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
   // 2.5 rotations/second base angular rate before driver-mode scaling is applied.
-  private final double MaxAngularRate = RotationsPerSecond.of(2.5).in(RadiansPerSecond);
+  private final double MaxAngularRate = RotationsPerSecond.of(2.0).in(RadiansPerSecond);
   private double driveSpeedScalar =
       OperatorConstants.normalDriveSpeed * OperatorConstants.drivetrainSpeedCap;
   private double rotationSpeedScalar =

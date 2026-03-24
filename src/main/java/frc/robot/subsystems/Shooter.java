@@ -76,7 +76,7 @@ public class Shooter extends SubsystemBase {
     distanceToRPM.put(1.8, -2900.0*theta);
     distanceToRPM.put(2.6, -3750.0*theta);
     distanceToRPM.put(3.4, -4540.0*theta);
-    distanceToRPM.put(4.5,-5594.0*theta);
+    distanceToRPM.put(4.3, -5794.0*theta);
   }
 
   /**
