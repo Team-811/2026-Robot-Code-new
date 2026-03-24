@@ -26,7 +26,7 @@ public class Intake extends SubsystemBase {
    * applied output whenever the intake command is held.
    */
   public void spin() {
-    intakeMotor.set(0.999999);
+    intakeMotor.set(0.80);
   }
 
   /** Stop the intake roller. */

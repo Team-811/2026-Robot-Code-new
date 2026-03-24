@@ -33,10 +33,10 @@ public class shooterNeoVortex extends SubsystemBase {
   // so the robot keeps roughly the same tuning starting point after switching to velocity mode.
   private static final double NEO_VORTEX_FREE_SPEED_RPM = 6784.0;
 
-  private static final double MAIN_TOP_RPM     = 0.00  * NEO_VORTEX_FREE_SPEED_RPM;
-  private static final double MAIN_BOTTOM_RPM  = 0.20  * NEO_VORTEX_FREE_SPEED_RPM;
-  private static final double CLOSE_TOP_RPM    = 0.00  * NEO_VORTEX_FREE_SPEED_RPM;
-  private static final double CLOSE_BOTTOM_RPM = 0.10  * NEO_VORTEX_FREE_SPEED_RPM;
+  private static final double MAIN_TOP_RPM     = 0.10  * NEO_VORTEX_FREE_SPEED_RPM;
+  private static final double MAIN_BOTTOM_RPM  = 0.30  * NEO_VORTEX_FREE_SPEED_RPM;
+  private static final double CLOSE_TOP_RPM    = 0.10  * NEO_VORTEX_FREE_SPEED_RPM;
+  private static final double CLOSE_BOTTOM_RPM = 0.20  * NEO_VORTEX_FREE_SPEED_RPM;
   private static final double CLEAR_RPM        = -0.30 * NEO_VORTEX_FREE_SPEED_RPM;
 
   // Starter gains for closed-loop velocity control.
