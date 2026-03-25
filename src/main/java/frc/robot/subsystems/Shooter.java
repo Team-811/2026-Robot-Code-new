@@ -31,6 +31,8 @@ public class Shooter extends SubsystemBase {
 
   private final TalonFX shooterMotor = new TalonFX(55, "*");
   private final TalonFX shooterMotorTheSecond = new TalonFX(43, "*");
+  private final Follower followerRequest =
+      new Follower(shooterMotor.getDeviceID(), MotorAlignmentValue.Opposed);
   private final VelocityVoltage velocityRequest = new VelocityVoltage(0);
   private static final String LIMELIGHT_NAME = "limelight-shooter";
 
@@ -61,11 +63,8 @@ public class Shooter extends SubsystemBase {
     slot0.kV = 0.12;
 
     shooterMotor.getConfigurator().apply(slot0);
-
-    // The second shooter motor mirrors the primary in the opposite direction so the wheels spin against each other.
-    shooterMotorTheSecond.setControl(
-        new Follower(shooterMotor.getDeviceID(), MotorAlignmentValue.Opposed));
     shooterMotorTheSecond.getConfigurator().apply(slot0);
+    enableFollowerMode();
 
     // Shooter calibration points recorded on 3/19/2026.
     //distanceToRPM.put(1.8, -1275.0);
@@ -98,6 +97,7 @@ public class Shooter extends SubsystemBase {
     }
 
     targetRPM = rpm;
+    enableFollowerMode();
 
     shooterMotor.setControl(
         velocityRequest.withVelocity(targetRPM / 60.0)
@@ -136,13 +136,20 @@ public class Shooter extends SubsystemBase {
 
   /** Stop both shooter motors immediately. */
   public void stopShooter() {
+    targetRPM = 0;
     shooterMotor.stopMotor();
-    shooterMotorTheSecond.stopMotor();
+    // Do not stop the second Talon directly: that would cancel follower mode.
+    // Re-applying follow here keeps it latched after commands end or the robot is re-enabled.
+    enableFollowerMode();
   }
 
   /** Return the last RPM value this subsystem asked the shooter to hold. */
   public double getTargetRPM() {
     return targetRPM;
+  }
+
+  private void enableFollowerMode() {
+    shooterMotorTheSecond.setControl(followerRequest);
   }
 
   @Override
