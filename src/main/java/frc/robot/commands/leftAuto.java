@@ -36,7 +36,7 @@ public class leftAuto extends SequentialCommandGroup {
       Intake intakeSpin,
       LimelightShooter limelight) {
     addCommands(
-        new lowerIntake(intake).withTimeout(5),
+        new lowerIntake(intake).withTimeout(1),
         new PathPlannerAuto("leftAuto"),
         new FaceAprilTag(drivetrain, limelight).withTimeout(1),
         new WaitCommand(1),

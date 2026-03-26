@@ -31,6 +31,6 @@ public class justShootAuto extends SequentialCommandGroup {
             new closeShooter(shooterN),
             new shooterLime(shooterK),
             new IndexSpin(indexer),
-            new lowerIntake(in).withTimeout(5)));
+            new lowerIntake(in).withTimeout(1)));
   }
 }
