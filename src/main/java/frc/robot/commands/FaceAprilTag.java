@@ -78,7 +78,10 @@ public class FaceAprilTag extends Command {
     double txDeg = MathUtil.applyDeadband(LimelightShooter.getTxDegrees(), 0.5);
     double omegaDeg = yawPID.calculate(txDeg);
     // Clamp to a gentle max and slew-limit for smooth approach; protects hardware and driver comfort.
-    double omegaRad = Units.degreesToRadians(MathUtil.clamp(omegaDeg, -MAX_ROTATE_DEG_PER_SEC, MAX_ROTATE_DEG_PER_SEC));
+    double maxRotateDegPerSec = MAX_ROTATE_DEG_PER_SEC * myDrivetrain.getDriveModeRotationScale();
+    double omegaRad =
+        Units.degreesToRadians(
+            MathUtil.clamp(omegaDeg, -maxRotateDegPerSec, maxRotateDegPerSec));
     omegaRad = omegaSlew.calculate(omegaRad);
 
     double pidErrorDeg = yawPID.getError();

@@ -13,6 +13,7 @@ import com.pathplanner.lib.config.RobotConfig;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -60,6 +61,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private boolean m_hasAppliedOperatorPerspective = false;
 
     private final SwerveRequest.ApplyRobotSpeeds m_pathApplyRobotSpeeds = new SwerveRequest.ApplyRobotSpeeds();
+    private double m_driveModeTranslationScale = 1.0;
+    private double m_driveModeRotationScale = 1.0;
 
     /* Swerve requests to apply during SysId characterization */
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
@@ -173,6 +176,17 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         return run(() -> this.setControl(requestSupplier.get()));
     }
 
+    /** Apply the current drive-mode scaling to autonomous/pathplanner robot-relative speeds. */
+    public void setDriveModeScalars(double translationScale, double rotationScale) {
+        m_driveModeTranslationScale = Math.max(0.0, translationScale);
+        m_driveModeRotationScale = Math.max(0.0, rotationScale);
+    }
+
+    /** Current rotation scaling from the selected drive mode. */
+    public double getDriveModeRotationScale() {
+        return m_driveModeRotationScale;
+    }
+
     /**
      * Runs the SysId Quasistatic test in the given direction for the routine
      * specified by {@link #m_sysIdRoutineToApply}.
@@ -245,11 +259,14 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 this::resetPose,         // Consumer for seeding pose against auto
                 () -> getState().Speeds, // Supplier of current robot speeds
                 // Consumer of ChassisSpeeds and feedforwards to drive the robot
-                (speeds, feedforwards) -> setControl(
-                    m_pathApplyRobotSpeeds.withSpeeds(speeds)
+                (speeds, feedforwards) -> {
+                    ChassisSpeeds scaledSpeeds = scaleDriveModeSpeeds(speeds);
+                    setControl(
+                    m_pathApplyRobotSpeeds.withSpeeds(scaledSpeeds)
                         .withWheelForceFeedforwardsX(feedforwards.robotRelativeForcesXNewtons())
                         .withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons())
-                ),
+                    );
+                },
                 new PPHolonomicDriveController(
                     // PID constants for translation (moderate start; tune on-field)
                     new PIDConstants(3.0, 0.0, 0.3),
@@ -283,11 +300,14 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                     path,
                     () -> getState().Pose, // Robot pose supplier
                     () -> getState().Speeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
-                    (speeds, feedforwards) -> setControl(
-                        m_pathApplyRobotSpeeds.withSpeeds(speeds)
+                    (speeds, feedforwards) -> {
+                        ChassisSpeeds scaledSpeeds = scaleDriveModeSpeeds(speeds);
+                        setControl(
+                        m_pathApplyRobotSpeeds.withSpeeds(scaledSpeeds)
                             .withWheelForceFeedforwardsX(feedforwards.robotRelativeForcesXNewtons())
                             .withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons())
-                    ),                
+                        );
+                    },                
                     new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for holonomic drive trains
                             new PIDConstants(5.0, 0.0, 0.0), // Translation PID constants
                             new PIDConstants(5.0, 0.0, 0.0) // Rotation PID constants
@@ -311,6 +331,14 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             return Commands.none();
         }
       }
+
+    private ChassisSpeeds scaleDriveModeSpeeds(ChassisSpeeds speeds) {
+        return new ChassisSpeeds(
+            speeds.vxMetersPerSecond * m_driveModeTranslationScale,
+            speeds.vyMetersPerSecond * m_driveModeTranslationScale,
+            speeds.omegaRadiansPerSecond * m_driveModeRotationScale
+        );
+    }
 
       
 }
