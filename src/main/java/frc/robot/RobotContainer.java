@@ -27,6 +27,9 @@ import frc.robot.commands.DescendCommand;
 import frc.robot.commands.FaceAprilTag;
 import frc.robot.commands.IndexSpin;
 import frc.robot.commands.IntakeSpin;
+import frc.robot.commands.SetFastDriveMode;
+import frc.robot.commands.SetNormalDriveMode;
+import frc.robot.commands.SetSlowDriveMode;
 import frc.robot.commands.StartAtHubAuto;
 import frc.robot.commands.closeNeo2;
 import frc.robot.commands.closeShooter;
@@ -182,26 +185,11 @@ public class RobotContainer {
 
     // Speed modes now split translation and rotation scaling to improve precision driving.
     m_driverController.leftBumper().onTrue(
-        Commands.runOnce(
-            () -> setSpeedMode(
-                OperatorConstants.slowDriveSpeed,
-                OperatorConstants.slowTurnSpeed,
-                "slow"))
-            .ignoringDisable(true));
+        new SetSlowDriveMode(this).ignoringDisable(true));
     m_driverController.rightBumper().onTrue(
-        Commands.runOnce(
-            () -> setSpeedMode(
-                OperatorConstants.fastDriveSpeed,
-                OperatorConstants.fastTurnSpeed,
-                "fast"))
-            .ignoringDisable(true));
+        new SetFastDriveMode(this).ignoringDisable(true));
     m_driverController.x().onTrue(
-        Commands.runOnce(
-            () -> setSpeedMode(
-                OperatorConstants.normalDriveSpeed,
-                OperatorConstants.normalTurnSpeed,
-                "normal"))
-            .ignoringDisable(true));
+        new SetNormalDriveMode(this).ignoringDisable(true));
 
     // While disabled, explicitly idle the swerve request so motors are not being driven by stale commands.
     final var idle = new SwerveRequest.Idle();
@@ -364,6 +352,30 @@ public class RobotContainer {
     SmartDashboard.putString("Drive/SpeedMode", speedModeLabel);
     SmartDashboard.putNumber("Drive/TranslationScale", driveSpeedScalar);
     SmartDashboard.putNumber("Drive/RotationScale", rotationSpeedScalar);
+  }
+
+  /** Apply the slow drive mode preset so autos or setup commands can reduce top speed. */
+  public void setSlowDriveMode() {
+    setSpeedMode(
+        OperatorConstants.slowDriveSpeed,
+        OperatorConstants.slowTurnSpeed,
+        "slow");
+  }
+
+  /** Apply the normal drive mode preset. */
+  public void setNormalDriveMode() {
+    setSpeedMode(
+        OperatorConstants.normalDriveSpeed,
+        OperatorConstants.normalTurnSpeed,
+        "normal");
+  }
+
+  /** Apply the fast drive mode preset for maximum translation and rotation authority. */
+  public void setFastDriveMode() {
+    setSpeedMode(
+        OperatorConstants.fastDriveSpeed,
+        OperatorConstants.fastTurnSpeed,
+        "fast");
   }
 
   /** Reset the drivetrain's field-centric reference and restart heading-hold from the new current heading. */
