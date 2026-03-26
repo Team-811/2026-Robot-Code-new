@@ -5,6 +5,7 @@ import com.pathplanner.lib.commands.PathPlannerAuto;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Indexer;
 import frc.robot.subsystems.Intake;
@@ -12,6 +13,7 @@ import frc.robot.subsystems.LimelightShooter;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.intakeForNow;
 import frc.robot.subsystems.shooterNeoVortex;
+
 
 /**
  * Autonomous routine that drives to mid-field, intakes during motion, then transitions into shooting.
@@ -37,14 +39,14 @@ public class goToMidAuto extends SequentialCommandGroup {
       LimelightShooter limelight) {
 
     addCommands(
-        new lowerIntake(intake).withTimeout(5),
-        new ParallelCommandGroup(
+        new lowerIntake(intake).withTimeout(1),
+        new ParallelCommandGroup( new lowerIntake(intake).withTimeout(5),
             new PathPlannerAuto("goToMidAuto"),
-            new IntakeSpin(intakeSpin).withTimeout(2)),
+            new IntakeSpin(intakeSpin).withTimeout(5)),
         new FaceAprilTag(drivetrain, limelight).withTimeout(1),
         new shooterLime(shooterK).withTimeout(2),
-        new ParallelDeadlineGroup(new shooterLime(shooterK).withTimeout(5)),
+        new ParallelDeadlineGroup(new shooterLime(shooterK).withTimeout(5),
         new closeNeo2(shooterN),
-        new IndexSpin(indexer));
+        new IndexSpin(indexer),new raiseIntake(intake).withTimeout(1)));
   }
 }
