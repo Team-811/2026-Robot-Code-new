@@ -43,7 +43,7 @@ public final class Constants {
     // keeping enough turn authority to line up quickly.
     public static final double fastDriveSpeed   = 0.90;
     public static final double fastTurnSpeed    = 1.00;
-    public static final double slowDriveSpeed   = 0.35;
+    public static final double slowDriveSpeed   = 0.2;
     public static final double slowTurnSpeed    = 0.55;
     public static final double normalDriveSpeed = 0.65;
     public static final double normalTurnSpeed  = 0.75;

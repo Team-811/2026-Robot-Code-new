@@ -27,6 +27,9 @@ import frc.robot.commands.DescendCommand;
 import frc.robot.commands.FaceAprilTag;
 import frc.robot.commands.IndexSpin;
 import frc.robot.commands.IntakeSpin;
+import frc.robot.commands.SetFastDriveMode;
+import frc.robot.commands.SetNormalDriveMode;
+import frc.robot.commands.SetSlowDriveMode;
 import frc.robot.commands.StartAtHubAuto;
 import frc.robot.commands.closeNeo2;
 import frc.robot.commands.closeShooter;
@@ -141,6 +144,7 @@ public class RobotContainer {
     headingHoldController.enableContinuousInput(-Math.PI, Math.PI);
     headingHoldController.setTolerance(Math.toRadians(1.5));
     resetHeadingHoldTarget();
+    drivetrain.setDriveModeScalars(driveSpeedScalar, rotationSpeedScalar);
     configureBindings();
     publishStaticTelemetry();
 
@@ -182,26 +186,11 @@ public class RobotContainer {
 
     // Speed modes now split translation and rotation scaling to improve precision driving.
     m_driverController.leftBumper().onTrue(
-        Commands.runOnce(
-            () -> setSpeedMode(
-                OperatorConstants.slowDriveSpeed,
-                OperatorConstants.slowTurnSpeed,
-                "slow"))
-            .ignoringDisable(true));
+        new SetSlowDriveMode(this).ignoringDisable(true));
     m_driverController.rightBumper().onTrue(
-        Commands.runOnce(
-            () -> setSpeedMode(
-                OperatorConstants.fastDriveSpeed,
-                OperatorConstants.fastTurnSpeed,
-                "fast"))
-            .ignoringDisable(true));
+        new SetFastDriveMode(this).ignoringDisable(true));
     m_driverController.x().onTrue(
-        Commands.runOnce(
-            () -> setSpeedMode(
-                OperatorConstants.normalDriveSpeed,
-                OperatorConstants.normalTurnSpeed,
-                "normal"))
-            .ignoringDisable(true));
+        new SetNormalDriveMode(this).ignoringDisable(true));
 
     // While disabled, explicitly idle the swerve request so motors are not being driven by stale commands.
     final var idle = new SwerveRequest.Idle();
@@ -273,7 +262,16 @@ public class RobotContainer {
         auto = new leftDriveAuto(drivetrain, shooterN, shooter, limeShooter, indexer, intakeArm);
         break;
       case "goToMidAuto":
-        auto = new goToMidAuto(this, drivetrain, shooterN, shooter, intakeArm, indexer, intake, limeShooter);
+        auto =
+            new goToMidAuto(
+                this,
+                drivetrain,
+                shooterN,
+                shooter,
+                intakeArm,
+                indexer,
+                intake,
+                limeShooter);
         break;
       case "fromRightBumpAuto":
         auto = new fromRightBumpAuto(drivetrain, shooterN, shooter, limeShooter, indexer, intakeArm);
@@ -357,14 +355,38 @@ public class RobotContainer {
   }
 
   /** Remember the selected speed mode and mirror the choice to SmartDashboard. */
-  private void 
-  setSpeedMode(double driveScalar, double rotationScalar, String label) {
+  private void setSpeedMode(double driveScalar, double rotationScalar, String label) {
     driveSpeedScalar = driveScalar * OperatorConstants.drivetrainSpeedCap;
     rotationSpeedScalar = rotationScalar * OperatorConstants.drivetrainSpeedCap;
     speedModeLabel = label;
+    drivetrain.setDriveModeScalars(driveSpeedScalar, rotationSpeedScalar);
     SmartDashboard.putString("Drive/SpeedMode", speedModeLabel);
     SmartDashboard.putNumber("Drive/TranslationScale", driveSpeedScalar);
     SmartDashboard.putNumber("Drive/RotationScale", rotationSpeedScalar);
+  }
+
+  /** Apply the slow drive mode preset so autos or setup commands can reduce top speed. */
+  public void setSlowDriveMode() {
+    setSpeedMode(
+        OperatorConstants.slowDriveSpeed,
+        OperatorConstants.slowTurnSpeed,
+        "slow");
+  }
+
+  /** Apply the normal drive mode preset. */
+  public void setNormalDriveMode() {
+    setSpeedMode(
+        OperatorConstants.normalDriveSpeed,
+        OperatorConstants.normalTurnSpeed,
+        "normal");
+  }
+
+  /** Apply the fast drive mode preset for maximum translation and rotation authority. */
+  public void setFastDriveMode() {
+    setSpeedMode(
+        OperatorConstants.fastDriveSpeed,
+        OperatorConstants.fastTurnSpeed,
+        "fast");
   }
 
   /** Reset the drivetrain's field-centric reference and restart heading-hold from the new current heading. */
@@ -374,12 +396,7 @@ public class RobotContainer {
     SmartDashboard.putNumber("Drive/FieldReferenceDeg", fieldRelativeReference.getDegrees());
     resetHeadingHoldTarget();
   }
-  public void setSlowDriveMode() {
-    setSpeedMode(
-        OperatorConstants.slowDriveSpeed,
-        OperatorConstants.slowTurnSpeed,
-        "slow");
-  }
+
   /** Capture the robot's current heading as the next heading-hold target. */
   private void resetHeadingHoldTarget() {
     headingHoldTarget = drivetrain.getState().Pose.getRotation();
