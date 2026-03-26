@@ -144,6 +144,7 @@ public class RobotContainer {
     headingHoldController.enableContinuousInput(-Math.PI, Math.PI);
     headingHoldController.setTolerance(Math.toRadians(1.5));
     resetHeadingHoldTarget();
+    drivetrain.setDriveModeScalars(driveSpeedScalar, rotationSpeedScalar);
     configureBindings();
     publishStaticTelemetry();
 
@@ -261,7 +262,16 @@ public class RobotContainer {
         auto = new leftDriveAuto(drivetrain, shooterN, shooter, limeShooter, indexer, intakeArm);
         break;
       case "goToMidAuto":
-        auto = new goToMidAuto(drivetrain, shooterN, shooter, intakeArm, indexer, intake, limeShooter);
+        auto =
+            new goToMidAuto(
+                this,
+                drivetrain,
+                shooterN,
+                shooter,
+                intakeArm,
+                indexer,
+                intake,
+                limeShooter);
         break;
       case "fromRightBumpAuto":
         auto = new fromRightBumpAuto(drivetrain, shooterN, shooter, limeShooter, indexer, intakeArm);
@@ -349,6 +359,7 @@ public class RobotContainer {
     driveSpeedScalar = driveScalar * OperatorConstants.drivetrainSpeedCap;
     rotationSpeedScalar = rotationScalar * OperatorConstants.drivetrainSpeedCap;
     speedModeLabel = label;
+    drivetrain.setDriveModeScalars(driveSpeedScalar, rotationSpeedScalar);
     SmartDashboard.putString("Drive/SpeedMode", speedModeLabel);
     SmartDashboard.putNumber("Drive/TranslationScale", driveSpeedScalar);
     SmartDashboard.putNumber("Drive/RotationScale", rotationSpeedScalar);
