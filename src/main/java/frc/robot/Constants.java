@@ -48,23 +48,9 @@ public final class Constants {
     public static final double normalDriveSpeed = 0.65;
     public static final double normalTurnSpeed  = 0.75;
 
-    // Miscellaneous hardware IDs and shared limits used by older subsystems.
-    public static final double kSlipCurrent  = 120; // Amps where wheels likely slip; typical FRC range 80-150 A
-    public static final int neoId            = 18;  // CAN ID for NEO motor controller
-    public static final int elKrakenId       = 23;  // CAN ID for elevator Kraken motor
-    public static final int fDoubSolC1       = 2;   // PCM channel for front double solenoid forward
-    public static final int rDoubSolC1       = 3;   // PCM channel for rear double solenoid forward
-    public static final int fDoubsolCT       = 6;   // PCM channel for front double solenoid reverse
-    public static final int rDoubSolCT       = 7;   // PCM channel for rear double solenoid reverse
-    public static final int fDoubSolA        = 0;   // PCM module address for front double solenoid
-    public static final int rDoubSolA        = 1;   // PCM module address for rear double solenoid
+    // intake arm Kraken ID
     public static final int cArmId           = 56;  // CAN ID for intake arm Kraken X60 / TalonFX controller on the roboRIO CAN bus
-    public static final int climbId          = 30;  // CAN ID for climber motor controller
-    public static final double kElDeadBand   = 3;   // Elevator deadband to ignore small commands
 
-    // Shooter CAN IDs (two motors driving the shooter wheels).
-    public static final int shooterTopId     = 26;
-    public static final int shooterBottomId  = 27;
   }
 
   /** Hardware mapping and tunables for the CANdle LED controller. */
