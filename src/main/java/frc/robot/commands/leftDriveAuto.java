@@ -36,6 +36,6 @@ public class leftDriveAuto extends SequentialCommandGroup {
             new closeShooter(shooterN),
             new shooterLime(shooterK),
             new IndexSpin(indexer),
-            new lowerIntake(in)));
+            new lowerIntake(in)).withTimeout(1));
   }
 }

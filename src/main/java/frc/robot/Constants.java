@@ -41,12 +41,12 @@ public final class Constants {
     // Driver speed mode presets.
     // Translation and rotation are split because drivers often want fine approach speed while still
     // keeping enough turn authority to line up quickly.
-    public static final double fastDriveSpeed   = 0.90;
-    public static final double fastTurnSpeed    = 1.00;
-    public static final double slowDriveSpeed   = 0.2;
-    public static final double slowTurnSpeed    = 0.55;
-    public static final double normalDriveSpeed = 0.65;
-    public static final double normalTurnSpeed  = 0.75;
+    public static final double fastDriveSpeed   = 0.55; //.90
+    public static final double fastTurnSpeed    = 0.75; //1.00
+    public static final double slowDriveSpeed   = 0.35; //.35
+    public static final double slowTurnSpeed    = 0.55; //.55
+    public static final double normalDriveSpeed = 0.65; //.65
+    public static final double normalTurnSpeed  = 0.75; //.75
 
     // intake arm Kraken ID
     public static final int cArmId           = 56;  // CAN ID for intake arm Kraken X60 / TalonFX controller on the roboRIO CAN bus

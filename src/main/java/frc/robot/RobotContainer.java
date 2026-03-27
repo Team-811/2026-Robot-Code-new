@@ -35,6 +35,7 @@ import frc.robot.commands.closeNeo2;
 import frc.robot.commands.closeShooter;
 import frc.robot.commands.fromRightBumpAuto;
 import frc.robot.commands.goToMidAuto;
+import frc.robot.commands.goToOutpost;
 import frc.robot.commands.justShootAuto;
 import frc.robot.commands.leftAuto;
 import frc.robot.commands.leftDriveAuto;
@@ -156,6 +157,7 @@ public class RobotContainer {
     autoChooser.addOption("fromRightBumpAuto", "fromRightBumpAuto");
     autoChooser.addOption("StartAtHubAuto", "StartAtHubAuto");
     autoChooser.addOption("justShootAuto", "justShootAuto");
+    autoChooser.addOption("goToOutpost", "goToOutpost");
     SmartDashboard.putData("autoChooser", autoChooser);
   }
 
@@ -281,6 +283,9 @@ public class RobotContainer {
         break;
       case "justShootAuto":
         auto = new justShootAuto(drivetrain, shooterN, shooter, limeShooter, indexer, intakeArm);
+        break;
+        case "goToOutpost":
+        auto = new goToOutpost(drivetrain, shooterN, shooter, intakeArm, indexer, intake, limeShooter);
         break;
       default:
         // If nothing is selected, fall back to the raw PathPlanner auto named "leftAuto".
