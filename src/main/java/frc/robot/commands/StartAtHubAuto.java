@@ -29,7 +29,7 @@ public class StartAtHubAuto extends SequentialCommandGroup {
         new FaceAprilTag(drivetrain, limelight).withTimeout(2),
         new WaitCommand(1),
         new ParallelCommandGroup(
-            new closeShooter(shooterN),
+            new closeNeo2(shooterN),
             new shooterLime(shooterK),
             new IndexSpin(indexer)));
   }

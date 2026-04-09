@@ -43,6 +43,6 @@ public class leftAuto extends SequentialCommandGroup {
         new ParallelDeadlineGroup(
             new IndexSpin(indexer).withTimeout(5),
             new shooterLime(shooterK),
-            new closeShooter(shooterN)));
+            new closeNeo2(shooterN)));
   }
 }

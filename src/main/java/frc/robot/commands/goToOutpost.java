@@ -5,6 +5,7 @@ import com.pathplanner.lib.commands.PathPlannerAuto;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.RobotContainer;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Indexer;
@@ -25,8 +26,8 @@ public class goToOutpost extends SequentialCommandGroup {
       LimelightShooter limelight) {
 
        addCommands(
-        new lowerIntake(intake).withTimeout(1), new ParallelCommandGroup(
-            new PathPlannerAuto("goToOutpost").withTimeout(3), new PathPlannerAuto("MuckMove")),
+        new lowerIntake(intake).withTimeout(1), new WaitCommand(1),
+            new PathPlannerAuto("goToOutpost"), new WaitCommand(1), new PathPlannerAuto("MuckMove"),
         new FaceAprilTag(drivetrain, limelight).withTimeout(1),
         new shooterLime(shooterK).withTimeout(2),
         new ParallelDeadlineGroup(new shooterLime(shooterK).withTimeout(5),

@@ -35,6 +35,7 @@ import frc.robot.commands.closeNeo2;
 import frc.robot.commands.closeShooter;
 import frc.robot.commands.fromRightBumpAuto;
 import frc.robot.commands.goToMidAuto;
+import frc.robot.commands.goToMidLeftAuto;
 import frc.robot.commands.goToOutpost;
 import frc.robot.commands.justShootAuto;
 import frc.robot.commands.leftAuto;
@@ -129,7 +130,8 @@ public class RobotContainer {
   // Operator runs the scoring mechanisms and climb.
   private final CommandXboxController c =
       new CommandXboxController(OperatorConstants.kOpControllerPort);
-
+//  private final CommandXboxController c =
+//    new CommandXboxController(2);
   private final SendableChooser<String> autoChooser;
 
   /**
@@ -158,6 +160,7 @@ public class RobotContainer {
     autoChooser.addOption("StartAtHubAuto", "StartAtHubAuto");
     autoChooser.addOption("justShootAuto", "justShootAuto");
     autoChooser.addOption("goToOutpost", "goToOutpost");
+        autoChooser.addOption("goToMidLeftAuto", "goToMidLeftAuto");
     SmartDashboard.putData("autoChooser", autoChooser);
   }
 
@@ -286,6 +289,9 @@ public class RobotContainer {
         break;
         case "goToOutpost":
         auto = new goToOutpost(drivetrain, shooterN, shooter, intakeArm, indexer, intake, limeShooter);
+        break;
+         case "goToMidLeftAuto":
+        auto = new goToMidLeftAuto(this, drivetrain, shooterN, shooter, intakeArm, indexer, intake, limeShooter);
         break;
       default:
         // If nothing is selected, fall back to the raw PathPlanner auto named "leftAuto".

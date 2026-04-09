@@ -42,7 +42,7 @@ public class Shooter extends SubsystemBase {
   private static final double LIMELIGHT_ANGLE = Units.degreesToRadians(25);
 
   private static final double VELOCITY_TOLERANCE_RPS = 1.5;
-  private static final double speed = 1800;
+  private static final double speed = -3750*0.9117;
 
   private final NetworkTable limelightTable =
       NetworkTableInstance.getDefault().getTable(LIMELIGHT_NAME);
@@ -71,11 +71,11 @@ public class Shooter extends SubsystemBase {
     //distanceToRPM.put(2.6, -3700.0);
     //distanceToRPM.put(3.4, -4750.0);
     double theta=0.9117;
-    distanceToRPM.put(0.8, -1900.0*theta);
-    distanceToRPM.put(1.8, -2900.0*theta);
+    distanceToRPM.put(0.8, -2000.0*theta);
+    distanceToRPM.put(1.8, -3000.0*theta);
     distanceToRPM.put(2.6, -3750.0*theta);
-    distanceToRPM.put(3.4, -4540.0*theta);
-    distanceToRPM.put(4.3, -5994.5*theta);
+    distanceToRPM.put(3.4, -5440.0*theta);
+    distanceToRPM.put(4.3, -6000.5*theta);
   }
 
   /**

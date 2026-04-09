@@ -28,7 +28,7 @@ public class justShootAuto extends SequentialCommandGroup {
         new FaceAprilTag(drivetrain, limelight).withTimeout(1),
         new WaitCommand(1),
         new ParallelCommandGroup(
-            new closeShooter(shooterN),
+            new closeNeo2(shooterN),
             new shooterLime(shooterK),
             new IndexSpin(indexer),
             new lowerIntake(in).withTimeout(1)));

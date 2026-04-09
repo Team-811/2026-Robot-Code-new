@@ -22,8 +22,8 @@ import frc.robot.subsystems.shooterNeoVortex;
  * fast for the PathPlanner traversal, slow for AprilTag facing, then normal before the shooting
  * sequence so teleop does not inherit an aggressive auto speed mode.
  */
-public class goToMidAuto extends SequentialCommandGroup {
-  public goToMidAuto(
+public class goToMidLeftAuto extends SequentialCommandGroup {
+  public goToMidLeftAuto(
       RobotContainer robotContainer,
       CommandSwerveDrivetrain drivetrain,
       shooterNeoVortex shooterN,
@@ -36,7 +36,7 @@ public class goToMidAuto extends SequentialCommandGroup {
        addCommands(
         new lowerIntake(intake).withTimeout(1),
         new ParallelCommandGroup( new lowerIntake(intake).withTimeout(5),
-            new PathPlannerAuto("goToMidAuto"),
+            new PathPlannerAuto("goToMidLeftAuto"),
             new IntakeSpin(intakeSpin).withTimeout(5)),
         new FaceAprilTag(drivetrain, limelight).withTimeout(1),
         new shooterLime(shooterK).withTimeout(2),
