@@ -70,7 +70,7 @@ public class Shooter extends SubsystemBase {
     //distanceToRPM.put(1.8, -1275.0);
     //distanceToRPM.put(2.6, -3700.0);
     //distanceToRPM.put(3.4, -4750.0);
-    double theta=0.9117;
+    double theta=0.2;  //0.9117 OG value; 0.2 demo value
     distanceToRPM.put(0.8, -2000.0*theta);
     distanceToRPM.put(1.8, -3000.0*theta);
     distanceToRPM.put(2.6, -3750.0*theta);

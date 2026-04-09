@@ -33,8 +33,8 @@ import frc.robot.Constants.OperatorConstants;
  * below or add inversion in the TalonFX configuration.
  */
 public class intakeForNow extends SubsystemBase {
-  private static final double LOWER_OUTPUT = 0.35;
-  private static final double RAISE_OUTPUT = -0.35;
+  private static final double LOWER_OUTPUT = 0.15;
+  private static final double RAISE_OUTPUT = -0.15;
 
   private final TalonFX intakeArmMotor;
   private final DutyCycleOut dutyRequest = new DutyCycleOut(0.0);
